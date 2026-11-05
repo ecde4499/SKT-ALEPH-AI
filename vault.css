@@ -1,0 +1,20 @@
+
+/* T08 additions only; T01 public introduction styles remain unchanged. */
+.t08-public-warning{padding:22px;border:1px solid #afc5be;border-radius:16px;background:#eaf3ef;margin-bottom:24px}
+.t08-locked {background:#fafafa;border:1px dashed #a3aaa4;border-radius:20px;padding:24px}
+.t08-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.t08-panel{padding:20px;border:1px solid var(--line);background:var(--surface);border-radius:18px}
+.t08-panel label{display:block;font-size:14px;font-weight:700;margin:12px 0}
+.t08-panel input{font:inherit;max-width:100%;width:100%;border:1px solid #aaa;border-radius:9px;padding:10px}
+.t08-panel button{margin-top:10px}
+#t08-message{min-height:24px;font-weight:700;color:#12604c;margin-top:15px}
+#t08-message.t08-error{color:#a02b2b}
+#t08-key-list{padding:0;list-style:none}
+#t08-key-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+#t08-private-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;list-style:none;padding:0}
+#t08-private-list li{padding:18px;border:1px solid var(--line);border-radius:16px;background:#eef3f0}
+#t08-private-list strong{display:block;margin-bottom:9px}
+#t08-key-proof{word-break:break-word;font-size:13px}
+.t08-small{font-size:13px;color:var(--muted)}
+#t08-section [hidden]{display:none!important}
+@media(max-width:740px){.t08-grid{grid-template-columns:1fr}}
