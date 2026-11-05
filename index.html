@@ -6,6 +6,7 @@
   <meta name="description" content="계획된 흐름 속에서 몰입하며 명확한 문제를 해결하는 사람의 한 페이지 소개">
   <title>나를 소개하는 한 페이지 | 김태양</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="vault.css">
 </head>
 <body>
   <a class="skip-link" href="#main">본문으로 바로가기</a>
@@ -18,6 +19,7 @@
         <a href="#interests">관심사</a>
         <a href="#strengths">강점</a>
         <a href="#working">일하는 방식</a>
+        <a href="#t08-section">패스키 비공개 공간</a>
       </nav>
     </div>
   </header>
@@ -192,6 +194,64 @@
         </div>
       </div>
     </section>
+
+    <!-- T08 public/locked boundary: NO private note contents exist in this HTML -->
+    <section class="section container" id="t08-section" aria-labelledby="t08-title">
+      <div class="section-heading">
+        <p class="eyebrow">06 / PASSKEY-ONLY SPACE</p>
+        <h2 id="t08-title">패스키로 잠근 나만의 공간</h2>
+      </div>
+      <p class="t08-public-warning"><strong>공개 / 비공개 경계</strong> — 위의 소개는 누구나 볼 수 있습니다.
+        아래 비공개 메모는 서버가 기기의 패스키 서명을 확인한 다음에만 내려줍니다.
+        비밀번호 입력란은 존재하지 않습니다.</p>
+      <div id="t08-locked" class="t08-locked">
+        <h3>🔒 비공개 영역 잠김</h3>
+        <p>등록된 패스키가 없으면 새 계정을 만들고, 이미 있다면 해당 기기의 패스키로 로그인하세요.
+          계정 별명은 가상 이름으로 만들고 진짜 개인정보를 넣지 마세요.</p>
+        <div class="t08-grid">
+          <form id="t08-register" class="t08-panel">
+            <h3>새 패스키 계정 등록</h3>
+            <label>계정 별명 (영문·숫자, 3~32자)
+              <input id="t08-new-name" pattern="[a-zA-Z0-9_-]{3,32}" autocomplete="off"
+                placeholder="example_owner_a" required></label>
+            <label>패스키 이름
+              <input id="t08-new-key" placeholder="내 휴대폰 또는 보안 키" maxlength="40" required></label>
+            <button class="button primary" type="submit">기기에 패스키 만들기</button>
+          </form>
+          <form id="t08-login" class="t08-panel">
+            <h3>기존 패스키로 로그인</h3>
+            <label>계정 별명
+              <input id="t08-login-name" pattern="[a-zA-Z0-9_-]{3,32}"
+                placeholder="example_owner_a" autocomplete="username webauthn" required></label>
+            <button class="button primary" type="submit">패스키로 열기</button>
+          </form>
+        </div>
+      </div>
+      <div id="t08-unlocked" hidden>
+        <div class="t08-panel">
+          <h3>🔓 비공개 영역 열림 — <span id="t08-current-user"></span></h3>
+          <p class="t08-small">아래 항목은 모두 만들어 넣은 가상 내용이며 서버에서 인증 후에만 조회합니다.</p>
+          <ul id="t08-private-list" aria-label="인증 후 불러오는 비공개 메모"></ul>
+          <button class="button secondary" id="t08-logout" type="button">로그아웃</button>
+        </div>
+        <div class="t08-panel">
+          <h3>등록된 패스키 관리</h3>
+          <p id="t08-key-count"></p>
+          <ul id="t08-key-list"></ul>
+          <p class="t08-small">분실에 대비해 두 번째 패스키를 먼저 등록하세요.
+            마지막 패스키는 계정을 잃지 않도록 삭제할 수 없습니다.</p>
+          <form id="t08-add">
+            <label>추가할 패스키 이름
+              <input id="t08-add-name" maxlength="40" placeholder="예비 휴대폰 / USB 보안 키" required></label>
+            <button type="submit" class="button primary">두 번째 패스키 등록</button>
+          </form>
+          <button type="button" class="button secondary" id="t08-show-public-key">서버에 보관한 공개키 근거 보기</button>
+          <div id="t08-key-proof" class="t08-small"></div>
+        </div>
+      </div>
+      <p id="t08-message" role="status" aria-live="polite"></p>
+      <p class="t08-small">실제 패스키 저장 위치(기기·구글 비밀번호 관리자·보안 키)는 등록할 때 뜨는 운영체제 화면에서 확인합니다. 서버는 개인키를 수집하지 않습니다.</p>
+    </section>
   </main>
 
   <footer class="footer">
@@ -202,5 +262,7 @@
   </footer>
 
   <script src="script.js"></script>
+  <script src="/vendor/simplewebauthn.js" defer></script>
+  <script src="vault.js" defer></script>
 </body>
 </html>
