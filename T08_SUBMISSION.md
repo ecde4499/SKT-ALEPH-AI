@@ -1,6 +1,6 @@
 # 과제8 제출 초안 — 내 소개 페이지에 패스키 달기
 
-> **2026-11-05 현재:** 과제1 공개 콘텐츠를 보존한 `assignment-8` 브랜치 구현, 일회용 PostgreSQL과 브라우저 가상 인증기 통합 검증 완료. **공개 배포 및 비로그인 접근 제한은 실제 HTTPS에서 확인 완료. 사용자의 물리적 패스키 2개 등록은 아직 검증 전**이므로 전체 제출 완료라고 표현하지 않는다.
+> **2026-11-05 현재:** 과제1 공개 콘텐츠를 보존한 `assignment-8` 브랜치 구현, 일회용 PostgreSQL과 브라우저 가상 인증기 통합 검증 완료. **실제 HTTPS 배포에서 WebAuthn 가상 인증기 9/9·공개 접근 검증까지 완료. 본인 소유 물리적 기기 패스키 2개 등록은 아직 미검증**이므로 전체 제출 완료라고 표현하지 않는다.
 >
 > 비공개 자료는 실제 개인정보가 아니라 코드로 만든 가상 메모 3건/계정이다. 심사자는 비공개 영역에 들어갈 필요가 없다.
 
@@ -9,7 +9,9 @@
 - 과제1 원본 소스: https://github.com/ecde4499/SKT-ALEPH-AI/tree/main (변경 없음)
 - 과제8 소스: https://github.com/ecde4499/SKT-ALEPH-AI/tree/assignment-8
 - 결과물 URL: **https://t08-skt-aleph-passkey-ecde4499.onrender.com** (공개 첫 화면 200, DB health 200, 비로그인 비공개 자료 401 확인)
-- 실제 공개 HTTP 검증: https://github.com/ecde4499/SKT-ALEPH-AI/actions/runs/41953423592 (5/5 PASS)\n- 가상 WebAuthn 통합 자동 시험: https://github.com/ecde4499/SKT-ALEPH-AI/actions/runs/41950370489
+- 실제 공개 HTTP 검증: https://github.com/ecde4499/SKT-ALEPH-AI/actions/runs/41953423592 (5/5 PASS)
+- **실제 HTTPS WebAuthn 가상 인증기 검증 9/9 PASS**: https://github.com/ecde4499/SKT-ALEPH-AI/actions/runs/41954420906
+- **실제 화면 5장, API 요청·응답, 패스키 삭제 후 재로그인 상세 증거**: [T08_LIVE_VERIFICATION_2026-11-05.md](T08_LIVE_VERIFICATION_2026-11-05.md)\n- 가상 WebAuthn 통합 자동 시험: https://github.com/ecde4499/SKT-ALEPH-AI/actions/runs/41950370489
 - 테스트 증거: 위 실행의 `t08-webauthn-test-evidence` 첨부(ZIP, 14일 보존)
 
 ## 인증 구현 설명서 — 여섯 항목
@@ -85,9 +87,10 @@
 - [x] 한 계정 패스키 2개 등록·하나 삭제·나머지 로그인 (가상 인증기 시험)
 - [x] 다른 계정 자료 양방향 404, 타 계정 패스키 403 (가상 인증기 시험)
 - [x] 공개 HTML에 비공개 메모·비밀번호/개인키 없음
-- [x] 실제 공개 HTTPS 서비스에서 소개 페이지 200 / DB health 200 / 비로그인 비공개 요청 401 검증\n- [ ] 실제 공개 HTTPS에서 **사용자 기기**로 패스키 등록·로그인 확인
+- [x] 실제 공개 HTTPS 서비스에서 소개 페이지 200 / DB health 200 / 비로그인 비공개 요청 401 검증\n- [x] 실제 공개 HTTPS에서 **가상 Chrome 인증기**로 패스키 등록·로그인·challenge 재사용 거절 확인 — [9/9 검증 기록](T08_LIVE_VERIFICATION_2026-11-05.md)
+- [ ] 실제 공개 HTTPS에서 **사용자 물리적 기기**로 패스키 2개 등록·삭제·재로그인 확인
 - [ ] 실제 기기 패스키 보관 위치 확인 및 두 개 등록/삭제
-- [ ] 삭제한 패스키의 재인증 거절 응답 확보
+- [x] 실제 HTTPS에서 가상 인증기 **삭제된 키 ID 재로그인 403** 확인 (실제 물리적 키 삭제는 미검증)
 - [ ] 실제 사용자 제출자 판단 3줄 확인
 - [x] 공개 결과물 URL 확보\n- [ ] 제출 당시 최신 **40자리 전체 소스 커밋 URL** 확인 후 입력
 
@@ -98,3 +101,10 @@
 - Render T08 수동 재배포: `dep-dbluabmc6qcc73fc6gag`, 상태 **live**, DB 초기화 후 서버 정상 기동.
 - [공개 HTTP 검증](https://github.com/ecde4499/SKT-ALEPH-AI/actions/runs/41953423592): `/` 200, `/api/t08/health` 200 (`ok:true`), `/api/t08/notes` 401, `/private` 401, `/vault.js` 200 — **5/5 PASS**.
 - 로그인한 실제 물리적 패스키의 생성/저장/삭제는 사용자 기기에서 후속 실증이 필요하다. 무인 가상 WebAuthn CI 결과로 그 시험을 대체하지 않는다.
+
+## 2026-11-05 실제 서비스 WebAuthn 추가 검증
+
+- [실제 HTTPS 가상 WebAuthn 9/9 PASS](https://github.com/ecde4499/SKT-ALEPH-AI/actions/runs/41954420906): 공개 페이지·비로그인 401, 패스키 등록, 공개키 저장, 매번 다른 등록·로그인 challenge, 재사용 401, 서로 다른 가상 키 2개 관리, A/B 양방향 404, 다른 계정 패스키 403, 제거된 키 403, 최종 키 삭제 409, 로그아웃 401, 남은 키 로그인 성공.
+- [브라우저 캡처 5장+비식별화 JSON 증거](https://github.com/ecde4499/SKT-ALEPH-AI/actions/runs/41954420906/artifacts/13382103640). 전부 테스트용 계정/메모이며 가상 인증기 결과임을 명시했다.
+- [최신 검증 보고서](T08_LIVE_VERIFICATION_2026-11-05.md)에서 HTTP 성공/거절 요청을 나란히 확인 가능. 기존 실제 단말 패스키 등록 확인은 미완료로 남긴다.
+- T08 브랜치에서 HTML의 문서 제목에 남아 있던 실명만 익명 제목으로 수정했다. T01 공개 소개 본문은 유지했고 원본 `main` 브랜치는 수정하지 않았다.
