@@ -1,0 +1,43 @@
+name: T08 live public and private HTTP verification
+on:
+  push:
+    branches: [assignment-8]
+    paths:
+      - '.github/workflows/t08-live-http.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-live-access:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify actual deployed HTTPS, DB health and unauthenticated access boundary
+        env:
+          T08_ORIGIN: https://t08-skt-aleph-passkey-ecde4499.onrender.com
+        run: |
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const base = process.env.T08_ORIGIN;
+          const checks = [
+            {path:'/',status:200,contains:'ONE PAGE INTRODUCTION',notContains:'[가상 데이터] 공개 소개 사이트'},
+            {path:'/api/t08/health',status:200,contains:'"ok":true'},
+            {path:'/api/t08/notes',status:401,contains:'error'},
+            {path:'/private',status:401,contains:'error'},
+            {path:'/vault.js',status:200,contains:'SimpleWebAuthnBrowser'}
+          ];
+          (async()=>{
+            for (const check of checks) {
+              const res = await fetch(base+check.path,{redirect:'manual',headers:{'Cache-Control':'no-cache'},signal:AbortSignal.timeout(110000)});
+              assert.equal(res.status,check.status,check.path+' unexpected HTTP status');
+              const body=await res.text();
+              if(check.contains)assert.ok(body.includes(check.contains),check.path+' missing expected content');
+              if(check.notContains)assert.ok(!body.includes(check.notContains),check.path+' leaks private fixture content');
+              console.log('PASS',check.path,'HTTP',res.status);
+            }
+            console.log('T08 LIVE PUBLIC HTTP: 5/5 PASS');
+          })().catch(error=>{console.error('FAIL T08 LIVE HTTP:',error.message);process.exitCode=1;});
+          NODE
