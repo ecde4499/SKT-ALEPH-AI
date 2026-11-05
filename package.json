@@ -1,0 +1,16 @@
+{
+  "name": "t08-passkey-intro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "engines": {"node": ">=22"},
+  "scripts": {"start": "node server/t08-app.cjs", "test": "node --test tests/*.test.cjs"},
+  "dependencies": {
+    "@simplewebauthn/server": "13.3.3",
+    "@simplewebauthn/browser": "13.3.3",
+    "express": "4.22.3",
+    "helmet": "8.3.0",
+    "pg": "8.23.0"
+  },
+  "devDependencies": {"playwright-core": "1.56.1"}
+}
