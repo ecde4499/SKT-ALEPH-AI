@@ -1,6 +1,6 @@
 # T08 Render 무료 배포 연결 — 마지막 설정
 
-> **상태(2026-11-05):** 소스 `assignment-8` 브랜치, CI PASS, 무료 Render PostgreSQL 생성 완료. Render Web Service도 생성했으나 `DATABASE_URL` 비밀값을 아직 입력하지 않아 시작을 **의도적으로 거부**하고 있다. 로그인/실서비스 WebAuthn 시험까지 완료했다고 주장하지 않는다.
+> **상태(2026-11-05 업데이트):** 사용자가 T08 전용 `DATABASE_URL` 연결을 완료했고, Render 수동 배포 `dep-dbluabmc6qcc73fc6gag`가 **live**. 실제 HTTPS 공개 주소의 DB health 200·소개 페이지 200·비로그인 401을 검증했다. 사용자 실제 패스키 기기 등록은 아직 미검증이다.
 
 ## 만들어진 과제8 자원
 
@@ -9,7 +9,7 @@
 | 원본 과제1 저장소 | https://github.com/ecde4499/SKT-ALEPH-AI/tree/main (변경 없음) |
 | 과제8 소스 | https://github.com/ecde4499/SKT-ALEPH-AI/tree/assignment-8 |
 | Render T08 웹 서비스 | https://dashboard.render.com/web/srv-dblu0po8v5cc73cu3os0 |
-| 공개 서비스 주소(현재 설정 미완료) | https://t08-skt-aleph-passkey-ecde4499.onrender.com |
+| 공개 서비스 주소(배포 LIVE) | https://t08-skt-aleph-passkey-ecde4499.onrender.com |
 | Render T08 PostgreSQL | https://dashboard.render.com/d/dpg-dbltv58ae00c73fnqik0-a |
 | 데이터베이스 이름 | `t08_passkey_aleph` |
 | 리전/과금 | Singapore / Free, DB 생성 후 약 30일 만료 |
@@ -18,7 +18,7 @@
 
 기존 T01 GitHub Pages와 T06·T07 Render/Supabase 서비스는 변경하지 않는다.
 
-## 필요한 비밀 환경변수 설정 1회
+## 비밀 환경변수 설정 방법 (2026-11-05 완료, 재설정할 때만 참고)
 
 Render는 생성된 PostgreSQL 내부 연결 문자열의 비밀번호를 이 자동화 도구에 노출하지 않는다. **사용자가 관리 페이지에서 직접 복사하여 Render 환경변수에 넣어야 한다.** 채팅/GitHub/스크린샷에 붙여 넣지 않는다.
 
@@ -32,8 +32,8 @@ Render는 생성된 PostgreSQL 내부 연결 문자열의 비밀번호를 이 �
 
 ## 배포 후 실제 검증
 
-- [ ] 비로그인 `/`에서 과제1 공개 소개 및 잠긴 영역 표시
-- [ ] 비로그인 `/api/t08/notes`와 `/private`가 HTTP 401
+- [x] 비로그인 `/`에서 공개 소개 페이지 HTTP 200, 잠긴 영역 HTML 포함 (실제 브라우저 시각 확인은 후속)
+- [x] 비로그인 `/api/t08/notes`와 `/private`가 HTTP 401 (실제 HTTPS 검증)
 - [ ] T08 공개 URL에서 새 가상 계정 등록, 실제 휴대폰/Windows Hello로 패스키 생성
 - [ ] 패스키 저장 위치(구글 비밀번호 관리자·Windows Hello·기기·보안 키)를 제출문에 실제 사용한 것으로 기록
 - [ ] 두 번째 **실제** 패스키 등록 후 한 개 삭제, 남은 키로 로그인
@@ -48,3 +48,9 @@ Render는 생성된 PostgreSQL 내부 연결 문자열의 비밀번호를 이 �
 - 패스키 창이 뜨지 않을 때: HTTPS 주소와 RP_ID, 브라우저 WebAuthn 및 기기 지원 확인.
 - 패스키를 모두 잃었을 때: 패스키 하나도 없는 상태로 만들지 않도록 **마지막 키 삭제를 HTTP 409로 차단**한다. 물리적 분실 시 자동 계정 복구는 구현되지 않았다.
 - Render 무료 DB는 30일 후 만료되며 백업도 제공하지 않는다. 계속 사용할 서비스라면 별도 지속성 있는 DB로 이전해야 한다.
+
+### 최종 접속 근거
+
+- [GitHub Actions 실제 HTTPS 점검 5/5 PASS](https://github.com/ecde4499/SKT-ALEPH-AI/actions/runs/41953423592)
+- Render T08 deploy: `dep-dbluabmc6qcc73fc6gag` / status `live`.
+- 비밀번호 및 DB 접속 URL 원문은 저장소와 보고서에 기록하지 않았다.
