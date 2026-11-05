@@ -1,0 +1,36 @@
+name: T08 one-time LIVE WebAuthn browser verification
+on:
+  push:
+    branches: [assignment-8]
+    paths:
+      - '.github/workflows/t08-live-browser-once.yml'
+permissions:
+  contents: read
+jobs:
+  live-passkey-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install exact verified dependencies
+        run: npm ci
+      - name: Install Korean screenshot font
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-nanum
+          fc-cache -f
+      - name: Verify LIVE HTTPS with Chromium virtual WebAuthn
+        run: |
+          if ! test -x /usr/bin/google-chrome; then npx playwright-core install chromium; fi
+          node tests/t08-live-browser.cjs
+      - name: Save synthetic-only, secret-free screenshots and response assertions
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: t08-live-virtual-passkey-evidence
+          path: test-results/t08-live/
+          if-no-files-found: warn
+          retention-days: 14
