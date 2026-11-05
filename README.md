@@ -1,3 +1,6 @@
+> **과제8(T08) 작업 브랜치 안내:** 이 브랜치에는 원래 과제1 소개 페이지를 그대로 공개로 유지하면서 패스키로 잠긴 비공개 메모 영역을 추가했다. 과제1 `main` 브랜치는 수정하지 않았다. 
+> **제출용 설명서:** [T08_SUBMISSION.md](T08_SUBMISSION.md) / **배포 설정:** [T08_DEPLOY.md](T08_DEPLOY.md). 정적 GitHub Pages는 비공개 API를 보호할 수 없으므로 T08은 별도 Node.js/Render 서버와 PostgreSQL이 필요하다.
+
 # 나를 소개하는 한 페이지
 
 README v1.0의 내용을 바탕으로 제작한 개인 소개 페이지입니다.
