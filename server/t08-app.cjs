@@ -305,7 +305,7 @@ function createApp(pool) {
       res.json({ok:true});
     } catch(e){await client.query('ROLLBACK');throw e;}finally{client.release();}
   }));
-  app.get('/private',auth,(_req,res)=>res.sendFile(path.join(ROOT,'private.html')));
+  app.get('/private',auth,(_req,res)=>res.sendFile(path.join(ROOT,'index.html')));
   app.use((err,req,res,_next)=>{
     if(!res.headersSent){console.error('T08 request error',err.code||err.name||'unknown');
       fail(res,500,'요청을 처리할 수 없습니다.');}
