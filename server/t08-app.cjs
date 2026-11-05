@@ -205,7 +205,7 @@ function createApp(pool) {
         ];
         for(const [title,body] of samples)await client.query(
           'INSERT INTO t08_notes(id,user_id,title,body) VALUES($1,$2,$3,$4)',
-          [random(),pending.user_id,title,body]);
+          [random(),pending.user_id,title,body+' (시연 계정: '+pending.username+')']);
       }
       await client.query('COMMIT');
     } catch(e) {
