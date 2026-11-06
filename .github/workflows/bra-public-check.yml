@@ -1,0 +1,67 @@
+name: BR-A public visitor smoke and screenshot
+on:
+  push:
+    branches: [final-br-a]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-no-login:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source integrity and source statistics
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          page=Path("portfolio/index.html").read_text(encoding="utf-8")
+          assert "김태양" in page and "2026년 8월 12일" in page
+          assert "ASSIGNMENT 10" in page and "ASSIGNMENT 13" in page
+          assert "2026년 11월 5일" in page
+          metrics=json.loads(Path("portfolio/data/summary.json").read_text())["stats"]
+          assert [metrics[k] for k in ("open_days","close_days","iso_weeks","done_days","partly_done_days","not_done_days")]==[58,58,13,39,11,8]
+          print("PASS local source: public narrative, research, placeholder and verified statistics")
+          PY
+      - name: Test public HTTPS site without authentication
+        run: |
+          set -eu
+          BASE=https://bra-kimtaeyang-portfolio.onrender.com
+          mkdir -p test-results/bra
+          for p in index.html resume.html statement.html experience.html research.html data/summary.json; do
+            echo "GET /$p (anonymous)"
+            curl --location --retry 12 --retry-delay 5 --retry-all-errors --max-time 18 --fail --silent --show-error "$BASE/$p" -o "test-results/bra/$(basename "$p")"
+          done
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          root=Path("test-results/bra")
+          html=(root/"index.html").read_text(encoding="utf-8")
+          for word in ("김태양","막힌 문제를 기록","2026년 8월 12일","과제10","과제13","이력서","자기소개서","경력기술서"):
+              assert word in html, word
+          for file in ("resume.html","statement.html","experience.html","research.html"):
+              assert len((root/file).read_bytes())>300, file
+          d=json.loads((root/"summary.json").read_text(encoding="utf-8"))
+          assert d["stats"]["recorded_days"]==58
+          assert d["stats"]["done_days"]==39
+          assert d["approved_paragraphs"]==[]
+          assert "동료 1가 말해 준 내 장점:" not in html
+          assert "감사일기:" not in html
+          print("PASS public anonymous HTTPS 6/6, verified narrative, files and no unapproved paragraphs")
+          PY
+      - name: Capture public first screen (Chrome)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-nanum
+          CHROME=$(command -v google-chrome || command -v chromium)
+          "$CHROME" --headless --disable-gpu --no-sandbox --disable-dev-shm-usage --hide-scrollbars --window-size=1400,950 --screenshot=test-results/bra/first-screen.png https://bra-kimtaeyang-portfolio.onrender.com || true
+          test -s test-results/bra/first-screen.png || echo "SCREENSHOT_SKIPPED: public smoke passed; screenshot unavailable"
+      - name: Upload evidence without private ritual source
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bra-public-visitor-evidence
+          path: test-results/bra
+          if-no-files-found: warn
+          retention-days: 14
