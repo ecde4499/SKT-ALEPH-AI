@@ -1,0 +1,78 @@
+name: BR-B public URL app check
+on:
+  push:
+    branches: [final-br-a]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-brb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check application and portfolio source
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("portfolio/brb/index.html").read_text(encoding="utf-8")
+          s=Path("portfolio/index.html").read_text(encoding="utf-8")
+          assert "URL 주소 해부실" in p
+          assert "정규화 후 정확 비교" in p
+          assert "addressStrip" in p
+          assert "quizOptions" in p
+          assert "630" in p and "300" in p and "120" in p
+          assert "./brb/index.html" in s
+          assert "ASSIGNMENT 13" in s
+          assert "13번 앱을 아직 만들지 않았습니다" not in s
+          print("PASS: app source and featured-work link")
+          PY
+      - name: Anonymous HTTPS public launch and linked portfolio
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="https://bra-kimtaeyang-portfolio.onrender.com"
+          mkdir -p test-results/brb
+          ok=0
+          for attempt in $(seq 1 24); do
+            echo "Live public check attempt $attempt"
+            if curl -LfsS --max-time 20 "$BASE/brb/index.html" -o test-results/brb/app.html && curl -LfsS --max-time 20 "$BASE/index.html" -o test-results/brb/portfolio.html; then
+              if grep -q "URL 주소 해부실" test-results/brb/app.html && grep -q 'href="./brb/index.html"' test-results/brb/portfolio.html; then
+                ok=1
+                break
+              fi
+            fi
+            sleep 8
+          done
+          if [ "$ok" != "1" ]; then
+            echo "FAIL: public deployment not ready or missing content"
+            exit 1
+          fi
+          python3 - <<'PY'
+          from pathlib import Path
+          a=Path("test-results/brb/app.html").read_text(encoding="utf-8")
+          p=Path("test-results/brb/portfolio.html").read_text(encoding="utf-8")
+          assert "<title>URL 주소 해부실" in a
+          assert "정규화 후 정확 비교" in a
+          assert "주소 해부하기" in a and "1분 연습" in a
+          assert "ASSIGNMENT 13" in p and "./brb/index.html" in p
+          assert len(a)>30000
+          print("PASS: anonymous public app and featured portfolio link")
+          PY
+      - name: Capture anonymous Chrome page
+        if: success()
+        shell: bash
+        run: |
+          mkdir -p test-results/brb
+          CHROME=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$CHROME" ]; then
+            "$CHROME" --headless --disable-gpu --no-sandbox --disable-dev-shm-usage --hide-scrollbars --window-size=1400,950 --screenshot=test-results/brb/public-screenshot.png https://bra-kimtaeyang-portfolio.onrender.com/brb/index.html || true
+          fi
+          if [ -s test-results/brb/public-screenshot.png ]; then echo "PASS screenshot captured"; else echo "SCREENSHOT NOT AVAILABLE"; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brb-anonymous-public-evidence
+          path: test-results/brb
+          if-no-files-found: warn
+          retention-days: 14
