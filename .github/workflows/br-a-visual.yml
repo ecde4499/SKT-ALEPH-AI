@@ -1,0 +1,59 @@
+name: BR-A browser layout & public page captures
+on:
+  push:
+    branches: [br-a-portfolio]
+    paths: ['.github/workflows/br-a-visual.yml']
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser automation and Korean fonts on ephemeral runner
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-nanum
+          npm install --no-save --ignore-scripts playwright-core@1.56.1
+      - name: Check actual public site in Chrome
+        run: |
+          mkdir -p evidence
+          node <<'JS'
+          const {chromium}=require('playwright-core');
+          (async()=>{
+            const b=await chromium.launch({headless:true,executablePath:'/usr/bin/google-chrome',args:['--no-sandbox','--disable-dev-shm-usage']});
+            const root='https://br-a-portfolio-ecde4499.onrender.com';
+            const pc=await b.newPage({viewport:{width:1365,height:900},locale:'ko-KR'});
+            let res=await pc.goto(root,{waitUntil:'networkidle',timeout:120000});
+            if(res.status()!==200)throw Error('desktop HTTP '+res.status());
+            if(await pc.locator('.chapter').count()!==5)throw Error('narrative chapters');
+            if(!(await pc.locator('h1').innerText()).includes('김태양'))throw Error('first screen name');
+            if((await pc.locator('#m-days').innerText()).trim()!=='58')throw Error('58-day metric');
+            await pc.screenshot({path:'evidence/desktop.png',fullPage:true});
+            const mobile=await b.newPage({viewport:{width:390,height:844},locale:'ko-KR'});
+            res=await mobile.goto(root,{waitUntil:'networkidle',timeout:120000});
+            if(res.status()!==200)throw Error('mobile HTTP '+res.status());
+            const overflow=await mobile.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
+            if(overflow>2)throw Error('mobile horizontal overflow '+overflow);
+            await mobile.screenshot({path:'evidence/mobile.png',fullPage:true});
+            res=await pc.goto(root+'/paper.html',{waitUntil:'networkidle'});
+            if(res.status()!==200||!(await pc.locator('main').innerText()).includes('630'))throw Error('paper');
+            await pc.screenshot({path:'evidence/research.png',fullPage:true});
+            res=await pc.goto(root+'/documents.html',{waitUntil:'networkidle'});
+            if(res.status()!==200)throw Error('document page');
+            await pc.screenshot({path:'evidence/documents.png',fullPage:true});
+            await b.close();console.log('BR-A REAL CHROME PASS: desktop, mobile, paper, documents; 4 screenshots');
+          })().catch(e=>{console.error(e.message);process.exit(1)});
+          JS
+      - name: Preserve evidence screenshots (no credentials, no ritual raw data)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: br-a-public-browser-screenshots
+          path: evidence/
+          if-no-files-found: warn
+          retention-days: 14
