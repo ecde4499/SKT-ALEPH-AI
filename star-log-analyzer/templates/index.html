@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="로그 한눈에: 로그인 실패, 심야 로그인, 트래픽 급증을 예시 CSV로 직접 실습하는 교육용 보안 로그 분석기">
+  <title>로그 한눈에 | 보안 이상징후 분석기</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#work">분석 도구로 이동</a>
+  <div class="topline"><div class="shell topitems"><span class="logo"><span class="logo-mark">∴</span> LOG<span class="logo-light">SCOPE</span></span><span class="top-note"><span class="light-dot"></span> EDUCATIONAL SECURITY LAB</span><span class="top-right">데이터 저장 없음 <span class="top-sep">·</span> KST 기준</span></div></div>
+  <main>
+    <section class="intro shell">
+      <div class="intro-main">
+        <p class="eyebrow"><span class="tiny-dash"></span> SECURITY ANALYTICS / PERSONAL PROJECT</p>
+        <h1>보안 로그를,<br><span>한눈에.</span></h1>
+        <p class="intro-desc">반복 로그인 실패부터 심야 로그인, 급격한 트래픽 증가까지.<br>로그에서 의미 있는 징후를 찾아 <strong>이유와 위험도</strong>를 쉽게 확인하세요.</p>
+        <div class="intro-actions"><a class="cta" href="#work">분석 시작하기 <span>↗</span></a><a class="text-link" href="#rules">탐지 기준 살펴보기 →</a></div>
+        <div class="intro-foot"><span>보안관제 입문자를 위한 실습 도구</span><span class="dot-sep">·</span><span>로그인 불필요</span><span class="dot-sep">·</span><span>설명 가능한 탐지</span></div>
+      </div>
+      <div class="intro-visual" aria-label="분석 대상 이벤트 개요">
+        <div class="visual-caption"><span>OVERVIEW</span><span>DETECTION SIGNALS</span></div>
+        <div class="waveform" aria-hidden="true"><i style="height:32%"></i><i style="height:47%"></i><i style="height:25%"></i><i style="height:60%"></i><i style="height:44%"></i><i style="height:88%"></i><i style="height:35%"></i><i style="height:52%"></i><i style="height:24%"></i><i style="height:67%"></i><i style="height:93%"></i><i style="height:47%"></i><i style="height:34%"></i><i style="height:76%"></i><i style="height:45%"></i><i style="height:29%"></i><i style="height:64%"></i><i style="height:42%"></i><i style="height:28%"></i><i style="height:69%"></i><i style="height:40%"></i><i style="height:52%"></i><i style="height:31%"></i><i style="height:45%"></i></div>
+        <div class="signal-list"><div><span class="signal-badge high">01</span><span>반복 로그인 실패</span><span class="muted">BRUTE FORCE</span></div><div><span class="signal-badge med">02</span><span>심야 로그인</span><span class="muted">OFF HOURS</span></div><div><span class="signal-badge med">03</span><span>트래픽 급증</span><span class="muted">TRAFFIC SPIKE</span></div></div>
+        <div class="visual-foot"><span>3 DETECTION RULES</span><span class="small-arrow">↗</span></div>
+      </div>
+    </section>
+
+    <section class="stepsband"><div class="shell steps"><div class="section-label">HOW IT WORKS</div><div class="step"><span>01</span><strong>로그 준비</strong><p>예시 로그 선택 또는 CSV 업로드</p></div><div class="step"><span>02</span><strong>이상징후 분석</strong><p>세 가지 탐지 규칙 적용</p></div><div class="step"><span>03</span><strong>결과 확인</strong><p>위험도와 근거 보고서 다운로드</p></div></div></section>
+
+    <section id="work" class="shell workspace">
+      <div class="section-head"><div><p class="eyebrow">01 / WORKSPACE</p><h2>로그 분석하기</h2><p>먼저 예시 데이터로 기능을 체험하거나 직접 CSV 파일을 선택하세요.</p></div><span class="notice-pill">파일은 서버에 저장되지 않습니다</span></div>
+      <div class="work-grid">
+        <div class="upload-card">
+          <div class="card-top"><span class="mini-index">DATA SOURCE</span><span class="format-label">.CSV</span></div>
+          <div class="data-choices" role="group" aria-label="입력 방법"><button id="sampleBtn" class="choice selected" type="button" aria-pressed="true"><span class="choice-icon">◈</span><span><strong>예시 로그 사용</strong><small>탐지 3종이 포함된 11건의 예시</small></span></button><button id="uploadBtn" class="choice" type="button" aria-pressed="false"><span class="choice-icon">↑</span><span><strong>내 CSV 분석</strong><small>UTF-8 · 최대 256KB · 2,000행</small></span></button></div>
+          <div id="uploadArea" class="upload-area" hidden><label for="fileInput" class="drop-label">파일 선택 <span>→</span></label><input type="file" id="fileInput" accept=".csv,text/csv" aria-describedby="fileHint"><small id="fileHint">필수 열: timestamp, event_type, user, src_ip, bytes</small><span id="selectedFile" class="file-meta">선택한 파일 없음</span></div>
+          <div class="upload-bottom"><p><span class="small-check">✓</span> KST 기준 · 개인정보 없는 예시 데이터</p><button id="analyzeBtn" type="button" class="primary-button">이상징후 분석 실행 <span>↗</span></button></div>
+          <div id="errorBox" class="error" role="alert" hidden></div>
+        </div>
+        <div class="guide-card"><div class="card-top"><span class="mini-index">INPUT REFERENCE</span><span class="format-label">5 COLUMNS</span></div><h3>CSV 입력 안내</h3><p>다음 형식의 이벤트를 읽어 분석합니다. 시간대가 없는 입력은 한국시간(KST)으로 처리합니다.</p><div class="code-ex"><div>timestamp,event_type,user,src_ip,bytes</div><div>2026-11-06T02:00:00+09:00,LOGIN_SUCCESS,user01,192.0.2.1,</div><div>2026-11-06T08:15:00+09:00,TRAFFIC,user01,192.0.2.1,3600</div></div><a href="/sample.csv" class="guide-download" download>예시 CSV 내려받기 <span>↗</span></a><p class="privacy-note">실제 계정·연락처·내부 IP는 업로드하지 마세요. 이 도구는 교육용이며 분석 입력을 저장하지 않습니다.</p></div>
+      </div>
+    </section>
+
+    <section id="results" class="shell results" aria-live="polite"><div class="section-head"><div><p class="eyebrow">02 / ANALYSIS</p><h2>탐지 결과</h2><p id="resultSummary">분석을 실행하면 이곳에 위험도와 탐지 이유가 나타납니다.</p></div><button id="downloadBtn" type="button" class="outline-button" disabled>리포트 CSV 다운로드 ↓</button></div>
+      <div class="metrics"><div class="metric"><span>입력 이벤트</span><strong id="metricTotal">—</strong><small>CSV ROWS</small></div><div class="metric"><span>탐지 사건</span><strong id="metricAlerts">—</strong><small>DETECTED INCIDENTS</small></div><div class="metric"><span>높음</span><strong id="metricHigh">—</strong><small class="red-marker">HIGH</small></div><div class="metric"><span>보통</span><strong id="metricMedium">—</strong><small class="orange-marker">MEDIUM</small></div></div>
+      <div class="results-card"><div class="results-head"><strong>이상징후 상세</strong><span id="alertCount" class="count-label">대기 중</span></div><div class="table-scroll"><table><thead><tr><th>탐지 시각 (KST)</th><th>탐지 규칙</th><th>위험도</th><th>사용자 / IP</th><th>발생 근거</th></tr></thead><tbody id="alertsBody"><tr><td colspan="5" class="empty">예시 로그로 분석을 시작해 보세요.</td></tr></tbody></table></div></div>
+      <p class="results-note">탐지는 규칙에 해당하는 활동을 알리는 참고 정보이며, 실제 공격 발생을 의미하지 않습니다.</p>
+    </section>
+
+    <section id="rules" class="rules-area"><div class="shell"><div class="section-head"><div><p class="eyebrow">03 / HOW RULES WORK</p><h2>무엇을 탐지하나요?</h2><p>규칙을 확인하고 실제 로그에서 어떻게 적용되는지 비교해 보세요.</p></div></div><div class="rule-grid"><div class="rule-card"><div class="rule-head"><span>RULE 01</span><span class="risk risk-high">높음</span></div><div class="rule-icon">·····</div><h3>반복 로그인 실패</h3><p>동일한 사용자와 IP에서 <strong>5분 이내 실패가 5회 이상</strong> 발생하면 탐지합니다.</p><code>BRUTE_FORCE</code></div><div class="rule-card"><div class="rule-head"><span>RULE 02</span><span class="risk risk-medium">보통</span></div><div class="rule-icon">◐</div><h3>심야 성공 로그인</h3><p>한국시간 <strong>00:00~05:59</strong> 사이에 성공한 로그인을 확인합니다.</p><code>OFFHOUR_LOGIN</code></div><div class="rule-card"><div class="rule-head"><span>RULE 03</span><span class="risk risk-medium">보통</span></div><div class="rule-icon">↗</div><h3>트래픽 급증</h3><p>5분 트래픽 합계가 <strong>직전 유효 3개 구간 평균의 2배 초과</strong>일 때 탐지합니다.</p><code>TRAFFIC_SPIKE</code></div></div></div></section>
+  </main>
+  <footer><div class="shell footer-inner"><span class="logo"><span class="logo-mark">∴</span> LOG<span class="logo-light">SCOPE</span></span><p>로그 한눈에 · ALEPH 나의 별 프로젝트 · 교육용 프로토타입</p><span>NO LOGIN · NO STORAGE</span></div></footer>
+</body>
+</html>
