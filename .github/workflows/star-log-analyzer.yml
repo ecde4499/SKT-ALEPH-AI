@@ -1,0 +1,65 @@
+name: Star project log analyzer checks
+on:
+  push:
+    branches: [star-log-analyzer]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install app dependencies
+        run: pip install -r star-log-analyzer/requirements.txt
+      - name: Run detector and API tests
+        run: |
+          cd star-log-analyzer
+          python -m unittest discover -s tests -v
+      - name: Check public app with no authentication
+        run: |
+          python - <<'PY'
+          import json, time, urllib.request
+          base='https://logscope-star-ecde4499.onrender.com'
+          last_error=None
+          for attempt in range(36):
+              try:
+                  with urllib.request.urlopen(base+'/health',timeout=18) as response:
+                      health=json.load(response)
+                      assert health['ok'] is True
+                  with urllib.request.urlopen(base+'/',timeout=18) as response:
+                      body=response.read().decode('utf-8')
+                      assert '보안 로그를' in body and '이상징후 분석' in body
+                  req=urllib.request.Request(base+'/api/analyze',data=b'sample=true',method='POST',headers={'Content-Type':'application/x-www-form-urlencoded'})
+                  with urllib.request.urlopen(req,timeout=18) as response:
+                      result=json.load(response)
+                      assert result['total_events']==11 and result['total_alerts']==3
+                      assert result['by_rule']=={'BRUTE_FORCE':1,'OFFHOUR_LOGIN':1,'TRAFFIC_SPIKE':1}
+                  print('PASS public no-login homepage /health and sample analysis, 11 events and 3 detections')
+                  break
+              except Exception as exc:
+                  last_error=repr(exc)
+                  print(f'Attempt {attempt+1}: {last_error}')
+                  time.sleep(10)
+          else: raise AssertionError('Public app not ready: '+str(last_error))
+          PY
+      - name: Capture actual browser screenshot
+        if: success()
+        run: |
+          mkdir -p artifacts
+          CHROME=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$CHROME" ]; then
+            "$CHROME" --headless --disable-gpu --no-sandbox --disable-dev-shm-usage --hide-scrollbars --window-size=1440,1000 --screenshot=artifacts/first-screen.png https://logscope-star-ecde4499.onrender.com/ || true
+          fi
+          test -s artifacts/first-screen.png && echo 'PASS screenshot captured' || echo 'Screenshot unavailable; HTTPS test remains authoritative'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: logscope-evidence
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
