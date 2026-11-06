@@ -6,6 +6,7 @@
   const errorBox = $('errorBox');
   let selectedMode = 'sample', lastAlerts = [], lastComplete = false;
   function mode(type) {
+    clearResults('입력 방식을 바꿨습니다. 새 데이터를 분석해 주세요.');
     selectedMode = type;
     sampleBtn.classList.toggle('selected', type === 'sample');
     uploadBtn.classList.toggle('selected', type === 'upload');
@@ -15,12 +16,24 @@
     hideError();
   }
   function hideError() { errorBox.hidden = true; errorBox.textContent = ''; }
+  function clearResults(message = '새 데이터를 분석하면 이곳에 결과가 표시됩니다.') {
+    lastAlerts = [];
+    lastComplete = false;
+    downloadBtn.disabled = true;
+    for (const id of ['metricTotal','metricAlerts','metricHigh','metricMedium']) $(id).textContent = '—';
+    $('alertCount').textContent = '대기 중';
+    $('resultSummary').textContent = message;
+    const body = $('alertsBody');
+    body.replaceChildren();
+    const row = child(body,'tr'); const cell = child(row,'td',message,'empty'); cell.colSpan = 5;
+  }
   function error(text) { errorBox.textContent = text; errorBox.hidden = false; }
   sampleBtn.addEventListener('click', () => mode('sample'));
   uploadBtn.addEventListener('click', () => mode('upload'));
   fileInput.addEventListener('change', () => {
     const f = fileInput.files && fileInput.files[0];
     $('selectedFile').textContent = f ? `${f.name} · ${(f.size / 1024).toFixed(1)}KB` : '선택한 파일 없음';
+    clearResults('선택한 파일을 분석하려면 분석 실행을 눌러 주세요.');
     hideError();
   });
   const t = (tag, content, className) => {
@@ -54,6 +67,7 @@
   }
   analyzeBtn.addEventListener('click', async () => {
     hideError();
+    clearResults('분석 중입니다…');
     const body = new FormData();
     if (selectedMode === 'sample') body.append('sample','true');
     else {

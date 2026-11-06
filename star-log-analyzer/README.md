@@ -77,3 +77,11 @@ app.py
  tests/test_detectors.py / tests/test_app.py
  plan.md / README.md
 ```
+
+## 중간 점검 2차 개선
+
+- **새 입력 선택 시 결과 초기화**: 예시/CSV 모드 전환 또는 업로드 파일 변경 시 직전 탐지 목록과 다운로드 버튼을 초기화하여 이전 결과를 현재 파일의 결과로 오인하지 않도록 개선했습니다.
+- **오류 후 재시도**: 잘못된 CSV로 분석을 시도하면 서버 오류 안내를 보여주고 이전 리포트를 비활성화합니다. 정상 CSV를 다시 선택하면 분석할 수 있습니다.
+- **실제 브라우저 E2E 자동화**: `tests/e2e_public.py`는 공개 Render URL에서 샘플 분석 → 리포트 CSV 파일 저장·표와 대조 → 샘플 다운로드·재업로드 → 날짜 오류 CSV → 재시도 → 모바일 분석·가로 넘침 여부를 Chrome으로 확인합니다. GitHub Actions `.github/workflows/logscope-second-check.yml` 실행 근거를 별도 보관합니다.
+
+실제 민감 로그 업로드 없이 예시 데이터만으로 검증합니다. GitHub Actions 환경에서는 Chromium이 공개 URL에 접속하며, 로컬 실행에서는 `pip install playwright` 및 Chrome/Chromium이 필요합니다.

@@ -1,0 +1,35 @@
+name: Logscope second checkpoint real-browser check
+on:
+  push:
+    branches: [star-log-analyzer]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  second-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run backend and CSV parsing unit tests
+        run: |
+          python -m pip install -r star-log-analyzer/requirements.txt
+          python -m unittest discover -s star-log-analyzer/tests -v
+      - name: Install browser driver (Chrome is preinstalled on runner)
+        run: python -m pip install 'playwright>=1.45,<2'
+      - name: Check live anonymous app with Chromium and a real CSV download
+        env:
+          LOGSCOPE_BASE_URL: https://logscope-star-ecde4499.onrender.com/
+          BROWSER_EVIDENCE_DIR: evidence/second-check
+        run: python star-log-analyzer/tests/e2e_public.py
+      - name: Upload second-check screenshots and CSV
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logscope-second-check-browser-evidence
+          path: evidence/second-check/
+          if-no-files-found: warn
+          retention-days: 14
