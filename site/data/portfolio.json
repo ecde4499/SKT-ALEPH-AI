@@ -1,0 +1,27 @@
+{
+  "generated_from": "개인 리추얼 JSON의 날짜·자기평가 집계; 원문·동료 이름 공개하지 않음",
+  "ritual": {
+    "days": 58,
+    "open": 58,
+    "close": 58,
+    "first_date": "2026-08-11",
+    "last_date": "2026-11-05",
+    "weeks_with_records": 13,
+    "status_counts": {
+      "실천했다": 39,
+      "일부 실천했다": 11,
+      "못 했다": 8
+    },
+    "status_missing": 0
+  },
+  "attendance": {
+    "available": false,
+    "reason": "공식 출석 기록 미제공"
+  },
+  "submissions": {
+    "available": false,
+    "reason": "공식 제출 현황 미제공"
+  },
+  "approved_paragraph_candidates": [],
+  "privacy_note": "타인의 실명·리추얼 본문·전화번호·비밀번호·API 키 미포함"
+}
