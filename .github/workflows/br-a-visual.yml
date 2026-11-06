@@ -14,11 +14,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install browser automation and Korean fonts on ephemeral runner
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y fonts-nanum
-          npm install --no-save --ignore-scripts playwright-core@1.56.1
+      - name: Install browser automation on ephemeral runner
+        run: npm install --no-save --ignore-scripts playwright-core@1.56.1
       - name: Check actual public site in Chrome
         run: |
           mkdir -p evidence
