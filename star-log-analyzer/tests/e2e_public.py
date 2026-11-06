@@ -97,7 +97,31 @@ def main():
         width = mp.evaluate('({scroll: document.documentElement.scrollWidth, viewport: window.innerWidth})')
         expect(width['scroll'] <= width['viewport']+2, 'P22 mobile page has no horizontal overflow')
         mp.screenshot(path=str(EVIDENCE / 'mobile-results.png'), full_page=True)
-        print('BROWSER_RESULT: 22 checks PASS (plus 3 row matches)')
+        # Regression: a slow response must not replace the screen after input changes.
+        page.evaluate("""() => {
+          const actualFetch = window.fetch.bind(window);
+          window.__releaseHeldAnalysis = null;
+          window.fetch = (...args) => {
+            if (String(args[0]).includes('/api/analyze') && window.__holdAnalysis) {
+              window.__holdAnalysis = false;
+              return new Promise((resolve, reject) => {
+                window.__releaseHeldAnalysis = () => actualFetch(...args).then(resolve, reject);
+              });
+            }
+            return actualFetch(...args);
+          };
+          window.__holdAnalysis = true;
+        }""")
+        page.locator('#sampleBtn').click()
+        page.locator('#analyzeBtn').click()
+        page.wait_for_function('typeof window.__releaseHeldAnalysis === "function"')
+        page.locator('#uploadBtn').click()
+        expect(page.locator('#metricAlerts').inner_text() == '—', 'P23 switching while pending clears results')
+        page.evaluate('window.__releaseHeldAnalysis()')
+        page.wait_for_function('!document.querySelector("#analyzeBtn").disabled')
+        expect(page.locator('#metricAlerts').inner_text() == '—' and page.locator('#downloadBtn').is_disabled(),
+               'P24 late analysis response cannot overwrite changed input')
+        print('BROWSER_RESULT: 24 checks PASS (plus 3 row matches)')
         browser.close()
 
 if __name__ == '__main__':

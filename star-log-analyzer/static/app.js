@@ -4,7 +4,7 @@
   const sampleBtn = $('sampleBtn'), uploadBtn = $('uploadBtn'), fileInput = $('fileInput');
   const analyzeBtn = $('analyzeBtn'), downloadBtn = $('downloadBtn');
   const errorBox = $('errorBox');
-  let selectedMode = 'sample', lastAlerts = [], lastComplete = false;
+  let selectedMode = 'sample', lastAlerts = [], lastComplete = false, requestVersion = 0;
   function mode(type) {
     clearResults('입력 방식을 바꿨습니다. 새 데이터를 분석해 주세요.');
     selectedMode = type;
@@ -17,6 +17,8 @@
   }
   function hideError() { errorBox.hidden = true; errorBox.textContent = ''; }
   function clearResults(message = '새 데이터를 분석하면 이곳에 결과가 표시됩니다.') {
+    // Ignore a delayed response if the user changes input or starts another analysis.
+    requestVersion += 1;
     lastAlerts = [];
     lastComplete = false;
     downloadBtn.disabled = true;
@@ -68,6 +70,7 @@
   analyzeBtn.addEventListener('click', async () => {
     hideError();
     clearResults('분석 중입니다…');
+    const startedVersion = requestVersion;
     const body = new FormData();
     if (selectedMode === 'sample') body.append('sample','true');
     else {
@@ -81,10 +84,11 @@
     try {
       const res = await fetch('/api/analyze',{method:'POST',body});
       const data = await res.json();
+      if (startedVersion !== requestVersion) return; // User changed the input while waiting.
       if (!res.ok) throw new Error(data.error || '분석에 실패했습니다.');
       fill(data);
       $('results').scrollIntoView({behavior:'smooth'});
-    } catch (e) { error(e.message || '연결에 문제가 있습니다. 다시 시도해 주세요.'); }
+    } catch (e) { if (startedVersion === requestVersion) error(e.message || '연결에 문제가 있습니다. 다시 시도해 주세요.'); }
     finally { analyzeBtn.disabled = false; analyzeBtn.innerHTML = '이상징후 분석 실행 <span>↗</span>'; }
   });
   const safeCsv = (value) => {
