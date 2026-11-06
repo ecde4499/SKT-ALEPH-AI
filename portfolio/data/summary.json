@@ -1,0 +1,19 @@
+{
+  "source": "본인 리추얼 기록 JSON (2026-11-05 제공; 원문 미공개)",
+  "range": {
+    "first": "2026-08-11",
+    "last": "2026-11-05"
+  },
+  "stats": {
+    "recorded_days": 58,
+    "open_days": 58,
+    "close_days": 58,
+    "iso_weeks": 13,
+    "done_days": 39,
+    "partly_done_days": 11,
+    "not_done_days": 8,
+    "unrated_days": 0
+  },
+  "approved_paragraphs": [],
+  "important_note": "리추얼 자기평가 자료; 공식 출석률 또는 전체 제출 완료 건수 아님"
+}

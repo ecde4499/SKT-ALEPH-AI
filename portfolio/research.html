@@ -1,0 +1,7 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="./style.css"><body><main class="wrap section" style="max-width:840px"><a class="subtle" href="./index.html#documents">← 포트폴리오로 돌아가기</a><p class="eyebrow">ASSIGNMENT 10 / PUBLIC RESEARCH DIGEST</p><h1>합성 URL 환경에서 도메인 정규화와 정확 비교가 공식기관 URL 판정에 미치는 영향</h1><p class="muted">과제10 논문 <b>공개용 축약본</b> · 김태양 · 2026.11.05. 원문 전체가 아니라 핵심 방법과 결과를 요약한 문서입니다.</p>
+<h2>연구 질문</h2><p>기관 호스트 이름이 URL 문자열에 포함된다는 이유로 공식으로 허용하는 방식보다, HTTPS 호스트를 정규화한 후 허용 목록과 정확 비교하는 정책이 합성 사칭 표기의 오허용을 줄이는가?</p>
+<h2>설계와 입력</h2><p>3개의 가상 공식 호스트(.example 예약 도메인) × 21개 사전 정의된 유형 × 10회 경로·쿼리 변형 = <b>630개 합성 URL</b>. 라벨은 공식으로 허용할 조건 240건, 그렇지 않은 조건 390건입니다. 외부 피싱 사이트·실제 공공기관 데이터는 사용하지 않았습니다.</p>
+<h2>비교 정책</h2><p><b>A:</b> URL 전체 문자열에 공식 도메인 텍스트가 포함됐는지 검색.<br><b>B:</b> HTTPS 원시 authority를 공식 문자열과 일치 비교.<br><b>C:</b> URL 파싱과 호스트·기본 포트의 제한적 정규화 후 정확 비교.</p>
+<h2>확인된 결과</h2><p><b>A:</b> 비공식 URL 390건 중 300건을 공식으로 오허용(FP). <b>B:</b> 공식 URL 240건 중 120건을 잘못 거절(FN). <b>C:</b> 이 연구가 정한 21개 합성 유형에서 두 오류 0건.</p>
+<h2>한계</h2><p>이 수치는 연구자가 정의한 합성 시나리오에 한정됩니다. 실제 피싱 분류기의 정확도, 도메인의 안전성, TLS 인증서 유효성, DNS 차단 성공률을 입증하지 않습니다. 비공식 판정은 악성 확정을 뜻하지 않습니다.</p>
+<p class="muted">출처: 본인이 작성한 과제10 논문(2026.11.05). 상세 설계·혼동행렬·재현 코드는 제출용 연구 원본에 보존되어 있습니다. 타인의 실명은 공개 페이지에서 생략했습니다.</p></main></body></html>
