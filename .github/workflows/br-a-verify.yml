@@ -1,0 +1,41 @@
+name: BR-A public site verification
+on:
+  push:
+    branches: [br-a-portfolio]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-source-and-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify the published source only contains aggregate counts
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, re
+          site=pathlib.Path('site')
+          html=(site/'index.html').read_text()
+          paper=(site/'paper.html').read_text()
+          m=json.loads((site/'data/portfolio.json').read_text())['ritual']
+          assert '김태양' in html and '김태양' in html.split('<h1>')[1][:60]
+          assert all(s in html for s in ['자기조절력','대인관계력','자기동기력'])
+          assert len(re.findall('class="chapter"',html))==5
+          assert m['days']==58 and m['open']==58 and m['close']==58
+          assert m['status_counts']=={'실천했다':39,'일부 실천했다':11,'못 했다':8}
+          assert '630' in paper and '.example' in paper
+          assert not (site/'ritual-history.json').exists()
+          print('PASS BR-A static structure and cited aggregate values')
+          PY
+      - name: Verify public HTTPS real response, paper and data JSON
+        run: |
+          set -euo pipefail
+          root=https://br-a-portfolio-ecde4499.onrender.com
+          for file in / /paper.html /documents.html /data/portfolio.json; do
+            code=$(curl --retry 4 --retry-delay 3 --location --silent --output /tmp/bra-check --write-out '%{http_code}' "$root$file")
+            printf '%-30s %s\n' "$file" "$code"
+            test "$code" = "200"
+          done
+          curl --retry 4 --location --fail --silent "$root/" | grep -q 'GROWTH'
+          curl --retry 4 --location --fail --silent "$root/data/portfolio.json" | python3 -c 'import json,sys;v=json.load(sys.stdin);assert v["ritual"]["days"]==58;print("PASS live JSON / 58 days")'
