@@ -38,7 +38,7 @@ jobs:
           import json
           root=Path("test-results/bra")
           html=(root/"index.html").read_text(encoding="utf-8")
-          for word in ("김태양","막힌 문제를 기록","2026년 8월 12일","과제10","과제13","이력서","자기소개서","경력기술서"):
+          for word in ("김태양","막힌 문제를 기록","2026년 8월 12일","과제10","ASSIGNMENT 13","이력서","자기소개서","경력기술서"):
               assert word in html, word
           for file in ("resume.html","statement.html","experience.html","research.html"):
               assert len((root/file).read_bytes())>300, file
