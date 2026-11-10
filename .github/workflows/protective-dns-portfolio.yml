@@ -1,0 +1,61 @@
+name: Protective DNS portfolio public verification
+on:
+  push:
+    branches: [final-br-a]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  portfolio-case-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify published files and evidence labels
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('portfolio/projects/protective-dns/index.html').read_text(encoding='utf-8')
+          h=Path('portfolio/index.html').read_text(encoding='utf-8')
+          for value in ('<title>Protective DNS', 'URL 위험도 판단', '240/240', '실제 피싱 탐지율', 'risk_scoring.py', 'risk_adapter.py', 'skt-aleph-capstone.vercel.app'):
+              assert value in p, 'Missing '+value
+          assert './projects/protective-dns/index.html' in h
+          assert len(p)>10000
+          print('PASS: case study content, evidence limits, homepage link')
+          PY
+      - name: Check public pages without authentication
+        run: |
+          set -euo pipefail
+          URL='https://bra-kimtaeyang-portfolio.onrender.com'
+          mkdir -p test-results/protective-dns
+          ok=0
+          for attempt in $(seq 1 25); do
+            if curl --silent --show-error --fail --location --max-time 20 "$URL/projects/protective-dns/index.html?build=$GITHUB_SHA" -o test-results/protective-dns/case-study.html && curl --silent --show-error --fail --location --max-time 20 "$URL/index.html?build=$GITHUB_SHA" -o test-results/protective-dns/home.html; then
+              if grep -q "URL 위험도 판단" test-results/protective-dns/case-study.html && grep -q 'projects/protective-dns/index.html' test-results/protective-dns/home.html; then ok=1;break;fi
+            fi
+            sleep 8
+          done
+          if [ "$ok" != "1" ]; then echo 'FAIL: new case study not publicly deployed'; exit 1; fi
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('test-results/protective-dns/case-study.html').read_text()
+          assert '<title>Protective DNS' in s and 'MY CONTRIBUTION' in s and '240/240' in s
+          assert '위험 점수만으로 DNS가 자동 차단되지 않습니다' in s
+          assert 'https://skt-aleph-capstone.vercel.app/capstone' in s
+          print('PASS: anonymous public case study + existing portfolio link')
+          PY
+      - name: Capture desktop and mobile Chromium screenshots
+        if: success()
+        run: |
+          CHROME=$(command -v google-chrome || command -v chromium || true)
+          if [ -z "$CHROME" ]; then echo "Chrome not found; screenshot skipped";exit 0;fi
+          "$CHROME" --headless --disable-gpu --no-sandbox --disable-dev-shm-usage --window-size=1440,1024 --screenshot=test-results/protective-dns/desktop.png https://bra-kimtaeyang-portfolio.onrender.com/projects/protective-dns/index.html || true
+          "$CHROME" --headless --disable-gpu --no-sandbox --disable-dev-shm-usage --window-size=420,920 --screenshot=test-results/protective-dns/mobile.png https://bra-kimtaeyang-portfolio.onrender.com/projects/protective-dns/index.html || true
+          ls -lh test-results/protective-dns/*.png || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: protective-dns-portfolio-verification
+          path: test-results/protective-dns/
+          retention-days: 14
+          if-no-files-found: warn
