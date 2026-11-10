@@ -1,0 +1,56 @@
+name: Clean4U import original feature screenshots
+on:
+  push:
+    branches: [final-br-a]
+    paths: [.github/workflows/clean4u-import-screens.yml]
+permissions:
+  contents: write
+jobs:
+  import-and-redact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: final-br-a
+      - name: Fetch source screenshots from original Notion media
+        run: |
+          curl -fsSL --max-time 30 --retry 2 'https://www.notion.so/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F6c698f47-22fe-818e-81d7-0003d622dcf3%2F10ecf875-a1e4-42d7-b8fe-cfedc9cac7ef%2Fimage.png?table=block&id=2fc98f47-22fe-80bc-8a3b-cab44703a239&cache=v2' -o /tmp/clean4u-login.png
+          curl -fsSL --max-time 30 --retry 2 'https://www.notion.so/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F6c698f47-22fe-818e-81d7-0003d622dcf3%2F31941a00-5500-4234-8f63-65f756fc2bd8%2Fimage.png?table=block&id=2fc98f47-22fe-8035-9eb2-d4ca2090ad66&cache=v2' -o /tmp/clean4u-admin.png
+          curl -fsSL --max-time 30 --retry 2 'https://www.notion.so/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F6c698f47-22fe-818e-81d7-0003d622dcf3%2Fe4e3004c-1abe-467e-a36b-0cb3431fd79e%2Fimage.png?table=block&id=2fc98f47-22fe-8083-9299-e2b7788061d1&cache=v2' -o /tmp/clean4u-schedule.png
+      - name: Redact account identifiers and save permanent WebP assets
+        run: |
+          python3 -m pip install -q --user Pillow
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw
+          out=Path('portfolio/projects/clean4u/assets')
+          out.mkdir(parents=True, exist_ok=True)
+          areas={
+            'login':[(497,226,583,247),(482,264,595,286),(46,445,167,469),(51,474,172,489),(495,544,654,569)],
+            'admin':[(153,595,339,627),(440,600,784,630),(443,747,791,786)],
+            'schedule':[]
+          }
+          for name,boxes in areas.items():
+              src=Path('/tmp/clean4u-'+name+'.png')
+              image=Image.open(src).convert('RGB')
+              expected={'login':(719,722),'admin':(805,808),'schedule':(825,827)}[name]
+              if image.size!=expected: raise RuntimeError(name+' screenshot changed size; check privacy redaction before publishing')
+              dr=ImageDraw.Draw(image)
+              for box in boxes: dr.rectangle(box, fill='#e5eef8')
+              target=out/(name+'.webp')
+              image.save(target,format='WEBP',quality=93,method=6)
+              assert target.stat().st_size>8000 and target.stat().st_size<300000
+              print('IMAGE_READY:',target,target.stat().st_size)
+          PY
+      - name: Commit sanitized assets (never publish original unredacted files)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add portfolio/projects/clean4u/assets/*.webp
+          if git diff --cached --quiet; then
+            echo 'No changes to commit'
+          else
+            git commit -m 'assets(clean4u): original Notion function screenshots with account details redacted [skip ci]'
+            git push origin HEAD:final-br-a
+          fi
