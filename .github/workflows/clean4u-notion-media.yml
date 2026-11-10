@@ -1,0 +1,31 @@
+name: Clean4U original Notion media retrieval
+on:
+  workflow_dispatch:
+  push:
+    branches: [final-br-a]
+permissions:
+  contents: read
+jobs:
+  fetch-public-media:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Try stable Notion media URLs
+        run: |
+          mkdir -p evidence
+          curl -fsSL -L --max-time 25 --retry 2 -w '%{http_code} %{content_type}\n' 'https://www.notion.so/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F6c698f47-22fe-818e-81d7-0003d622dcf3%2F10ecf875-a1e4-42d7-b8fe-cfedc9cac7ef%2Fimage.png?table=block&id=2fc98f47-22fe-80bc-8a3b-cab44703a239&cache=v2' -o evidence/notion-login.png || echo 'UNAVAILABLE notion-login'
+          file evidence/notion-login.png || true
+          curl -fsSL -L --max-time 25 --retry 2 -w '%{http_code} %{content_type}\n' 'https://www.notion.so/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F6c698f47-22fe-818e-81d7-0003d622dcf3%2F31941a00-5500-4234-8f63-65f756fc2bd8%2Fimage.png?table=block&id=2fc98f47-22fe-8035-9eb2-d4ca2090ad66&cache=v2' -o evidence/notion-admin.png || echo 'UNAVAILABLE notion-admin'
+          file evidence/notion-admin.png || true
+          curl -fsSL -L --max-time 25 --retry 2 -w '%{http_code} %{content_type}\n' 'https://www.notion.so/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F6c698f47-22fe-818e-81d7-0003d622dcf3%2Fe4e3004c-1abe-467e-a36b-0cb3431fd79e%2Fimage.png?table=block&id=2fc98f47-22fe-8083-9299-e2b7788061d1&cache=v2' -o evidence/notion-schedule.png || echo 'UNAVAILABLE notion-schedule'
+          file evidence/notion-schedule.png || true
+          for f in evidence/*.png; do
+            [ -e "$f" ] || continue
+            if file "$f" | grep -q "PNG image data"; then echo "PNG_OK $f"; else rm -f "$f"; fi
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clean4u-notion-original-media
+          path: evidence/*.png
+          if-no-files-found: warn
+          retention-days: 1
