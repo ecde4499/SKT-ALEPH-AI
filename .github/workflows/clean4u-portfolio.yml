@@ -43,7 +43,7 @@ jobs:
           ok=0
           for attempt in $(seq 1 24); do
             if curl -fsSL --max-time 20 "$BASE/projects/clean4u/index.html?revision=$GITHUB_SHA" -o evidence/clean4u/site.html && curl -fsSL --max-time 20 "$BASE/index.html?revision=$GITHUB_SHA" -o evidence/clean4u/home.html && curl -fsSL --max-time 20 "$BASE/statement.html?revision=$GITHUB_SHA" -o evidence/clean4u/statement.html && curl -fsSL --max-time 20 "$BASE/experience.html?revision=$GITHUB_SHA" -o evidence/clean4u/experience.html; then
-              if grep -q "Spring Boot 3.4.12" evidence/clean4u/site.html && grep -q "projects/clean4u/index.html" evidence/clean4u/home.html && grep -q "projects/clean4u/index.html" evidence/clean4u/statement.html && grep -q "projects/clean4u/index.html" evidence/clean4u/experience.html; then ok=1;break;fi
+              if grep -q "Spring Boot 3.4.12" evidence/clean4u/site.html && grep -q 'id="screens"' evidence/clean4u/site.html && grep -q './assets/login.webp' evidence/clean4u/site.html && grep -q "projects/clean4u/index.html" evidence/clean4u/home.html && grep -q "projects/clean4u/index.html" evidence/clean4u/statement.html && grep -q "projects/clean4u/index.html" evidence/clean4u/experience.html; then ok=1;break;fi
             fi
             sleep 8
           done
