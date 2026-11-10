@@ -1,0 +1,76 @@
+name: Clean4U portfolio public verification
+on:
+  push:
+    branches: [final-br-a]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  clean4u-public:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify case study and cross-links
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("portfolio/projects/clean4u/index.html").read_text(encoding="utf-8")
+          h=Path("portfolio/index.html").read_text(encoding="utf-8")
+          s=Path("portfolio/statement.html").read_text(encoding="utf-8")
+          e=Path("portfolio/experience.html").read_text(encoding="utf-8")
+          for q in ("Clean4U", "Spring Boot 3.4.12", "Session", "이메일 인증", "직원 승인", "근무 스케줄", "기존 Notion 상세 기록", "자기소개서 보기"):
+              assert q in p, f"Missing: {q}"
+          assert "https://github.com/team-clean4U/Clean4U/tree/develop" in p
+          assert "실제 서비스 화면이 아닌 기능 구성 설명용 도식" in p
+          assert "projects/clean4u/index.html" in h
+          assert "projects/clean4u/index.html" in s
+          assert "projects/clean4u/index.html" in e
+          assert "<meta name=\"viewport\"" in p
+          assert "010-" not in p
+          assert len(p) > 14000
+          print("PASS: site content, privacy, source, links in all 4 pages")
+          PY
+      - name: Verify anonymous public HTTPS and links
+        run: |
+          set -euo pipefail
+          BASE="https://bra-kimtaeyang-portfolio.onrender.com"
+          mkdir -p evidence/clean4u
+          ok=0
+          for attempt in $(seq 1 24); do
+            if curl -fsSL --max-time 20 "$BASE/projects/clean4u/index.html?revision=$GITHUB_SHA" -o evidence/clean4u/site.html && curl -fsSL --max-time 20 "$BASE/index.html?revision=$GITHUB_SHA" -o evidence/clean4u/home.html && curl -fsSL --max-time 20 "$BASE/statement.html?revision=$GITHUB_SHA" -o evidence/clean4u/statement.html && curl -fsSL --max-time 20 "$BASE/experience.html?revision=$GITHUB_SHA" -o evidence/clean4u/experience.html; then
+              if grep -q "Spring Boot 3.4.12" evidence/clean4u/site.html && grep -q "projects/clean4u/index.html" evidence/clean4u/home.html && grep -q "projects/clean4u/index.html" evidence/clean4u/statement.html && grep -q "projects/clean4u/index.html" evidence/clean4u/experience.html; then ok=1;break;fi
+            fi
+            sleep 8
+          done
+          if [ "$ok" != 1 ]; then echo 'FAIL: public deployment missing updated pages';exit 1;fi
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          d=Path('evidence/clean4u')
+          site=(d/'site.html').read_text()
+          home=(d/'home.html').read_text()
+          statement=(d/'statement.html').read_text()
+          assert '<title>Clean4U' in site
+          assert '자기소개서 보기' in site and 'href="../../statement.html"' in site
+          assert '프로젝트 GitHub' in site
+          assert 'Clean4U' in home and 'Clean4U' in statement
+          assert '<title>' in site and 'HTML' not in site[:10] or '<!doctype html>' in site[:30].lower()
+          print('PASS: public Clean4U site / home / statement / experience')
+          PY
+      - name: Capture browser evidence
+        if: success()
+        run: |
+          CHROME=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$CHROME" ]; then
+            "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --window-size=1440,1000 --screenshot=evidence/clean4u/desktop.png https://bra-kimtaeyang-portfolio.onrender.com/projects/clean4u/index.html || true
+            "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --window-size=430,940 --screenshot=evidence/clean4u/mobile.png https://bra-kimtaeyang-portfolio.onrender.com/projects/clean4u/index.html || true
+          fi
+          ls -lh evidence/clean4u/*.png || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: clean4u-public-verification
+          path: evidence/clean4u/
+          retention-days: 14
+          if-no-files-found: warn
