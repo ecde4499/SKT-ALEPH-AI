@@ -22,7 +22,7 @@ jobs:
           for q in ("Clean4U", "Spring Boot 3.4.12", "Session", "이메일 인증", "직원 승인", "근무 스케줄", "기존 Notion 상세 기록", "자기소개서 보기"):
               assert q in p, f"Missing: {q}"
           assert "https://github.com/team-clean4U/Clean4U/tree/develop" in p
-          assert "실제 서비스 화면이 아닌 기능 구성 설명용 도식" in p
+          assert "실제 Clean4U 관리자 화면" in p
           assert "projects/clean4u/index.html" in h
           assert "projects/clean4u/index.html" in s
           assert "projects/clean4u/index.html" in e
