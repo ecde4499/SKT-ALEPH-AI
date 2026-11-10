@@ -29,7 +29,11 @@ jobs:
           assert "<meta name=\"viewport\"" in p
           assert "010-" not in p
           assert len(p) > 14000
-          print("PASS: site content, privacy, source, links in all 4 pages")
+          for n in ("login","admin","schedule"):
+              assert Path("portfolio/projects/clean4u/assets/"+n+".webp").stat().st_size > 8000
+              assert './assets/'+n+'.webp' in p
+          assert 'id="screens"' in p
+          print("PASS: site content, all 3 real screenshots, privacy, source and cross-links")
           PY
       - name: Verify anonymous public HTTPS and links
         run: |
@@ -58,6 +62,15 @@ jobs:
           assert '<title>' in site and 'HTML' not in site[:10] or '<!doctype html>' in site[:30].lower()
           print('PASS: public Clean4U site / home / statement / experience')
           PY
+      - name: Verify all three screenshots are publicly served
+        run: |
+          set -euo pipefail
+          for name in login admin schedule; do
+            curl -fsSL --max-time 20 "https://bra-kimtaeyang-portfolio.onrender.com/projects/clean4u/assets/$name.webp?rev=$GITHUB_SHA" -o "evidence/clean4u/$name.webp"
+            file "evidence/clean4u/$name.webp" | grep "Web/P image"
+            test "$(wc -c < "evidence/clean4u/$name.webp")" -gt 8000
+          done
+          echo "PASS: login/admin/schedule original screenshots are downloadable"
       - name: Capture browser evidence
         if: success()
         run: |
@@ -65,6 +78,7 @@ jobs:
           if [ -n "$CHROME" ]; then
             "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --window-size=1440,1000 --screenshot=evidence/clean4u/desktop.png https://bra-kimtaeyang-portfolio.onrender.com/projects/clean4u/index.html || true
             "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --window-size=430,940 --screenshot=evidence/clean4u/mobile.png https://bra-kimtaeyang-portfolio.onrender.com/projects/clean4u/index.html || true
+            "$CHROME" --headless --no-sandbox --disable-gpu --disable-dev-shm-usage --window-size=1440,1000 --screenshot=evidence/clean4u/screens.png 'https://bra-kimtaeyang-portfolio.onrender.com/projects/clean4u/index.html#screens' || true
           fi
           ls -lh evidence/clean4u/*.png || true
       - uses: actions/upload-artifact@v4
