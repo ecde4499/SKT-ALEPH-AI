@@ -94,3 +94,44 @@ body{font-size:15px;line-height:1.75}
   .secondary-grid h4{margin:5px 0}
   .secondary-grid p{line-height:1.57}
 }
+
+/* 2026-11-11: review improvements. Keep original palette and ornament unchanged. */
+.hero-intro .hero-sentence{display:block}
+.section-step{font-size:.87rem;letter-spacing:.08em}
+.strength .section-desc{margin-bottom:28px;line-height:1.9}
+.strength .tri{gap:23px}
+.strength .tri article{padding:31px 30px 29px;min-height:365px}
+.strength .tri article h3{font-size:1.16rem;line-height:1.5;margin:14px 0 16px}
+.strength .tri article p{font-size:.9rem;line-height:1.93;margin-bottom:15px}
+.strength .tri article small{padding-top:14px}
+.strength .evidence-details{margin-top:25px;padding-top:17px}
+.evidence-details summary{display:inline-flex;align-items:center;justify-content:flex-start;gap:7px;max-width:none;width:auto;list-style:none;font-size:.83rem}
+.evidence-details summary::-webkit-details-marker{display:none}
+.evidence-details summary::marker{content:""}
+.evidence-details summary .evidence-toggle{font-size:1.08rem;line-height:1;display:inline-block;margin:0;transform:translateY(-1px)}
+.evidence-details[open] summary .evidence-toggle{transform:rotate(45deg)}
+.works-section{display:flex;flex-direction:column;justify-content:center;align-items:stretch;gap:0}
+.works-heading{display:block;max-width:810px;flex:none;min-width:0}
+.works-heading h2{display:block;margin:12px 0 12px}
+.works-heading .section-desc{display:block;margin:0 0 24px;max-width:800px}
+.works-section .featured-works{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;width:100%;flex:none}
+.works-section .featured-work{min-width:0}
+.works-section .secondary-work{display:block;width:100%;flex:none;margin-top:20px}
+.works-section .secondary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(min-width:1100px){
+  .works-section{display:flex;flex-direction:column;align-items:stretch;justify-content:center;padding-block:30px}
+  .works-heading .section-desc{margin-bottom:19px}
+  .works-section .secondary-work{margin-top:18px}
+}
+@media(max-width:1099px){
+  .works-section{display:block;padding-block:64px}
+  .works-section .featured-works{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .strength .tri article{padding:25px 24px;min-height:auto}
+}
+@media(max-width:800px){
+  .works-section{padding-block:56px}
+  .works-section .featured-works,.works-section .secondary-grid{grid-template-columns:1fr}
+  .strength .tri{gap:15px}
+  .strength .tri article{padding:24px 24px;min-height:0}
+  .strength .tri article p{font-size:.88rem}
+}
