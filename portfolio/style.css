@@ -135,3 +135,7 @@ body{font-size:15px;line-height:1.75}
   .strength .tri article{padding:24px 24px;min-height:0}
   .strength .tri article p{font-size:.88rem}
 }
+
+/* Anchor navigation: keep each numbered chapter visible below the sticky header. */
+.strength,.works-section{scroll-margin-top:72px}
+@media(max-width:800px){.strength,.works-section{scroll-margin-top:65px}}

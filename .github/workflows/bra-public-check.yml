@@ -43,7 +43,7 @@ jobs:
               assert (Path('portfolio')/l).is_file()
           assert '경험을 지원 서류로 연결합니다.' not in p
           assert '공개 GitHub 이슈로 문의하기' in p
-          assert 'href="./style.css?v=20261111-review3"' in p
+          assert 'href="./style.css?v=20261111-review4"' in p
           assert 'box-shadow:14px 16px 0 #e3eee7' in css
           assert "font-family:'Noto Sans KR'" in css
           stats=json.loads(Path('portfolio/data/summary.json').read_text())['stats']
@@ -58,7 +58,7 @@ jobs:
           READY=0
           for attempt in $(seq 1 30); do
             if curl -fsSL --max-time 20 "$BASE/index.html?rev=$GITHUB_SHA" -o test-results/bra/index.html && curl -fsSL --max-time 20 "$BASE/style.css?rev=$GITHUB_SHA" -o test-results/bra/style.css; then
-              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'review improvements' test-results/bra/style.css && grep -q 'flex-direction:column' test-results/bra/style.css && grep -q 'style.css?v=20261111-review3' test-results/bra/index.html;then READY=1;break;fi
+              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'review improvements' test-results/bra/style.css && grep -q 'flex-direction:column' test-results/bra/style.css && grep -q 'style.css?v=20261111-review4' test-results/bra/index.html;then READY=1;break;fi
             fi
             sleep 6
           done
@@ -121,6 +121,17 @@ jobs:
                   driver.save_screenshot('test-results/bra/'+label+'-hero.png')
                   for anchor in (['story','approach','works'] if label=='desktop' else ['works']):
                       driver.execute_script("document.getElementById(arguments[0]).scrollIntoView({behavior:'instant',block:'start'})",anchor)
+                      if anchor in ('approach','works'):
+                          anchors=driver.execute_script("""
+                             const id=arguments[0],section=document.getElementById(id),
+                                   label=section.querySelector('.section-step').getBoundingClientRect(),
+                                   last=id==='works'?section.querySelector('.secondary-grid').getBoundingClientRect():section.querySelector('.evidence-details').getBoundingClientRect();
+                             return {labelTop:Math.round(label.top),lastBottom:Math.round(last.bottom),height:innerHeight}
+                          """,anchor)
+                          print('ANCHOR_'+label+'_'+anchor+': '+json.dumps(anchors))
+                          assert anchors['labelTop']>=63,'Sticky header hides chapter number: '+str(anchors)
+                          if label=='desktop':
+                              assert anchors['lastBottom']<=anchors['height']+6,'Chapter content runs off first screen: '+str(anchors)
                       driver.save_screenshot('test-results/bra/'+label+'-'+anchor+'.png')
               print('PASS: ordered project heading, two featured cards, two secondary cards, adjacent plus, and no mobile overflow')
           finally:
