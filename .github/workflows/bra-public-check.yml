@@ -19,6 +19,7 @@ jobs:
           p=Path('portfolio/index.html').read_text()
           css=Path('portfolio/style.css').read_text()
           assert '<aside class="hero-box"><span>MY WORK PRINCIPLE</span>' in p
+          assert '<a class="logo" href="#top">김태양 / 포트폴리오</a>' in p
           assert '통신 현장에서 배운 조율과 개발·보안 실습에서 익힌 검증 습관을 연결합니다' in p
           assert '김태양<span class="accent">.' in p
           assert '<section id="story"' in p and '<section id="approach"' in p
@@ -43,6 +44,7 @@ jobs:
                          'Java, Spring Boot','Supabase Auth','재직 기간은 증빙 대조 필요'):
               assert phrase in resume,phrase
           assert 'href="./resume.css?v=20261111-r2"' in resume
+          assert '<a class="resume-brand" href="./index.html">김태양 / 포트폴리오</a>' in resume
           assert '@media(max-width:720px)' in resume_css
           assert '@media print' in resume_css
           assert resume.count('class="resume-project"')==2
@@ -87,7 +89,9 @@ jobs:
           curl -fsSL --max-time 20 "$BASE/resume.html?rev=$GITHUB_SHA" -o test-results/bra/resume.html
           curl -fsSL --max-time 20 "$BASE/resume.css?rev=$GITHUB_SHA" -o test-results/bra/resume.css
           grep -q 'class="resume-main-grid"' test-results/bra/resume.html
+          grep -q 'resume.css?v=20261111-r2' test-results/bra/resume.html
           grep -q 'Public resume page' test-results/bra/resume.css
+          grep -q 'Tablet readability' test-results/bra/resume.css
           echo "PASS: revised portfolio, expanded resume and all supporting pages available anonymously"
       - name: Inspect desktop and mobile layout in Chrome
         run: |
