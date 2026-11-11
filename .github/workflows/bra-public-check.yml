@@ -42,7 +42,7 @@ jobs:
                          '통신 회선 설계·현장 관리','2022~2024','ALEPH AI·보안 실습 과정',
                          'Java, Spring Boot','Supabase Auth','재직 기간은 증빙 대조 필요'):
               assert phrase in resume,phrase
-          assert 'href="./resume.css?v=20261111-r1"' in resume
+          assert 'href="./resume.css?v=20261111-r2"' in resume
           assert '@media(max-width:720px)' in resume_css
           assert '@media print' in resume_css
           assert resume.count('class="resume-project"')==2
