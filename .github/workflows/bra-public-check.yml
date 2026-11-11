@@ -34,6 +34,7 @@ jobs:
           assert '.hero-message{white-space:nowrap}' in css
           assert '@media(max-width:760px)' in css
           assert 'Desktop fit refinement' in css
+          assert 'style.css?v=20261111-compact2' in html
           stats=json.loads(Path('portfolio/data/summary.json').read_text())['stats']
           assert [stats[x] for x in ('open_days','close_days','iso_weeks','done_days','partly_done_days','not_done_days')]==[58,58,13,39,11,8]
           print('PASS: 3-paragraph introduction, 3 grounded examples, featured order, links, and dated sourced statistics')
