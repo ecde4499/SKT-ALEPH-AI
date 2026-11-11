@@ -38,7 +38,7 @@ jobs:
               assert (Path('portfolio')/l).is_file()
           assert '경험을 지원 서류로 연결합니다.' not in p
           assert '공개 GitHub 이슈로 문의하기' in p
-          assert 'href="./style.css?v=20261111-balanced1"' in p
+          assert 'href="./style.css?v=20261111-balanced2"' in p
           assert 'box-shadow:14px 16px 0 #e3eee7' in css
           assert "font-family:'Noto Sans KR'" in css
           stats=json.loads(Path('portfolio/data/summary.json').read_text())['stats']
@@ -94,6 +94,8 @@ jobs:
                   if label=='desktop':
                       assert result['taglineLines']==1,'Hero title still wraps'
                       assert result['ornament']!='none','Original ornament missing'
+                      chapter=next(x for x in result['sections'] if x['name']=='works')
+                      assert chapter['height']<=height-72+3,'Project chapter still taller than viewport: '+str(chapter)
                   driver.save_screenshot('test-results/bra/'+label+'-hero.png')
                   for anchor in (['story','approach','works'] if label=='desktop' else ['works']):
                       driver.execute_script("document.getElementById(arguments[0]).scrollIntoView({behavior:'instant',block:'start'})",anchor)

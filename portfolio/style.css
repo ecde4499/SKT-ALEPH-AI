@@ -78,3 +78,19 @@ body{font-size:15px;line-height:1.75}
   .works-section{width:min(calc(100% - 2rem),1080px)}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Keep the expanded portfolio cards within a laptop-sized desktop chapter. */
+@media(min-width:1100px){
+  .works-section{padding-block:18px}
+  .works-section .section-desc{margin-bottom:13px}
+  .works .featured-work{padding:18px 23px}
+  .works h3{margin:9px 0 3px}
+  .featured-work .project-subtitle{margin-bottom:9px}
+  .works .featured-work p{margin-bottom:9px;line-height:1.7}
+  .works .featured-work a{padding-top:7px}
+  .secondary-work{margin-top:13px}
+  .secondary-work>h3{margin-bottom:8px}
+  .secondary-grid article{padding:11px 17px}
+  .secondary-grid h4{margin:5px 0}
+  .secondary-grid p{line-height:1.57}
+}
