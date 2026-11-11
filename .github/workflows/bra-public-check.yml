@@ -30,6 +30,24 @@ jobs:
           assert all('class="eyebrow section-step">'+n+'</span>' in p for n in ('01','02','03','04'))
           assert '01 / 소개' not in p and '03 / 대표 프로젝트' not in p
           assert p.count('class="featured-work"')==2
+          for href,label in (
+              ('./projects/protective-dns/index.html','Protective DNS 자세히 보기'),
+              ('./projects/clean4u/index.html','Clean4U 자세히 보기'),
+              ('./research.html','공식기관 URL 판정 방식 비교 자세히 보기'),
+              ('./brb/index.html','URL 주소 해부실 자세히 보기')):
+              assert 'href="'+href+'">'+label+' ↗</a>' in p,(href,label)
+          resume=Path('portfolio/resume.html').read_text()
+          resume_css=Path('portfolio/resume.css').read_text()
+          for phrase in ('김태양','Protective DNS','Clean4U','로그 한눈에','ZTNA·XDR 공동방어전',
+                         '통신 회선 설계·현장 관리','2022~2024','ALEPH AI·보안 실습 과정',
+                         'Java, Spring Boot','Supabase Auth','재직 기간은 증빙 대조 필요'):
+              assert phrase in resume,phrase
+          assert 'href="./resume.css?v=20261111-r1"' in resume
+          assert '@media(max-width:720px)' in resume_css
+          assert '@media print' in resume_css
+          assert resume.count('class="resume-project"')==2
+          assert '010-' not in resume and 'gmail.com' not in resume
+          assert len(resume)>6500 and len(resume_css)>6000
           assert '<div class="works-heading">' in p
           assert '<div class="secondary-grid">' in p
           assert 'class="hero-intro"' in p and p.count('class="hero-sentence"')==2
@@ -58,7 +76,7 @@ jobs:
           READY=0
           for attempt in $(seq 1 30); do
             if curl -fsSL --max-time 20 "$BASE/index.html?rev=$GITHUB_SHA" -o test-results/bra/index.html && curl -fsSL --max-time 20 "$BASE/style.css?rev=$GITHUB_SHA" -o test-results/bra/style.css; then
-              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'review improvements' test-results/bra/style.css && grep -q 'flex-direction:column' test-results/bra/style.css && grep -q 'style.css?v=20261111-review4' test-results/bra/index.html;then READY=1;break;fi
+              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'review improvements' test-results/bra/style.css && grep -q 'flex-direction:column' test-results/bra/style.css && grep -q 'style.css?v=20261111-review4' test-results/bra/index.html && grep -q 'Clean4U 자세히 보기' test-results/bra/index.html;then READY=1;break;fi
             fi
             sleep 6
           done
@@ -66,7 +84,11 @@ jobs:
           for p in resume.html statement.html experience.html research.html brb/index.html projects/clean4u/index.html projects/protective-dns/index.html data/summary.json;do
             curl -fsSL --max-time 20 "$BASE/$p" -o /dev/null
           done
-          echo "PASS: new portfolio and supporting pages available anonymously"
+          curl -fsSL --max-time 20 "$BASE/resume.html?rev=$GITHUB_SHA" -o test-results/bra/resume.html
+          curl -fsSL --max-time 20 "$BASE/resume.css?rev=$GITHUB_SHA" -o test-results/bra/resume.css
+          grep -q 'class="resume-main-grid"' test-results/bra/resume.html
+          grep -q 'Public resume page' test-results/bra/resume.css
+          echo "PASS: revised portfolio, expanded resume and all supporting pages available anonymously"
       - name: Inspect desktop and mobile layout in Chrome
         run: |
           python3 -m pip install -q selenium
@@ -133,7 +155,34 @@ jobs:
                           if label=='desktop':
                               assert anchors['lastBottom']<=anchors['height']+6,'Chapter content runs off first screen: '+str(anchors)
                       driver.save_screenshot('test-results/bra/'+label+'-'+anchor+'.png')
-              print('PASS: ordered project heading, two featured cards, two secondary cards, adjacent plus, and no mobile overflow')
+              for width,height,label in ((1440,900,'desktop'),(390,844,'mobile'),(768,900,'tablet')):
+                  driver.set_window_size(width,height)
+                  driver.get('https://bra-kimtaeyang-portfolio.onrender.com/resume.html?rev='+os.getenv('GITHUB_SHA',''))
+                  WebDriverWait(driver,25).until(lambda d:d.execute_script('return document.fonts.status')=='loaded')
+                  layout=driver.execute_script("""
+                     const main=document.querySelector('.resume-primary-column').getBoundingClientRect(),
+                           side=document.querySelector('.resume-side-column').getBoundingClientRect(),
+                           hero=document.querySelector('.resume-intro').getBoundingClientRect(),
+                           focus=document.querySelector('.resume-focus').getBoundingClientRect();
+                     return {viewport:innerWidth,fullWidth:document.documentElement.scrollWidth,
+                            mainX:Math.round(main.x),sideX:Math.round(side.x),
+                            mainWidth:Math.round(main.width),sideWidth:Math.round(side.width),
+                            heroHeight:Math.round(hero.height),focusWidth:Math.round(focus.width),
+                            projects:document.querySelectorAll('.resume-project').length,
+                            skills:document.querySelectorAll('.resume-skills div').length};
+                  """)
+                  print('RESUME_'+label+': '+json.dumps(layout,ensure_ascii=False))
+                  assert layout['fullWidth']<=layout['viewport']+2,'Resume horizontal overflow: '+label
+                  assert layout['mainWidth']>=240,'Resume main column squeezed: '+str(layout)
+                  assert layout['projects']==2 and layout['skills']==4
+                  if label=='desktop':
+                      assert layout['sideX']>layout['mainX']+layout['mainWidth']-5,'Resume side column not next to main'
+                  else:
+                      assert layout['sideX']<=layout['mainX']+40,'Resume columns not stacked'
+                  driver.save_screenshot('test-results/bra/resume-'+label+'-top.png')
+                  driver.execute_script("document.getElementById('resume-projects').scrollIntoView({behavior:'instant',block:'start'})")
+                  driver.save_screenshot('test-results/bra/resume-'+label+'-projects.png')
+              print('PASS: homepage, four uniform project links, expanded resume and responsive desktop/mobile/tablet layouts')
           finally:
               driver.quit()
           PY
