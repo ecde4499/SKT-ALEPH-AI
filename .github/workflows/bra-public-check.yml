@@ -99,7 +99,7 @@ jobs:
                        ornament:getComputedStyle(document.querySelector('.hero-box')).display,
                        sentenceSeparation:Math.round(heroLine2.getBoundingClientRect().top-heroLine1.getBoundingClientRect().top),
                        sentence1Height:Math.round(heroLine1.getBoundingClientRect().height),
-                       projectGeometry:{headingBottom:Math.round(heading.bottom),mainTop:Math.round(main.top),mainBottom:Math.round(main.bottom),moreTop:Math.round(more.top),cards:cards.map(x=>({x:Math.round(x.x),y:Math.round(x.y),width:Math.round(x.width)}))},
+                       projectGeometry:{headingBottom:Math.round(heading.bottom),headingTextBottom:Math.round(document.querySelector('.works-heading .section-desc').getBoundingClientRect().bottom),mainTop:Math.round(main.top),mainBottom:Math.round(main.bottom),moreTop:Math.round(more.top),cards:cards.map(x=>({x:Math.round(x.x),y:Math.round(x.y),width:Math.round(x.width)}))},
                        plusGap:Math.round(plus.left-label.right),
                        projectHeight:Math.round(document.querySelector('.works-section').getBoundingClientRect().height)};
                   """)
@@ -108,7 +108,7 @@ jobs:
                   assert result['sentenceSeparation']>15,'Hero sentences not on separate lines'
                   assert 0<=result['plusGap']<=13,'Plus is not beside ritual label: '+str(result['plusGap'])
                   g=result['projectGeometry']
-                  assert g['mainTop']>=g['headingBottom']+5,'Projects heading and main cards overlap or flow horizontally: '+str(g)
+                  assert g['mainTop']>=g['headingTextBottom']+8,'Projects heading text too close to featured cards: '+str(g)
                   assert g['moreTop']>=g['mainBottom']+5,'Secondary works not placed underneath featured works: '+str(g)
                   if label=='desktop':
                       assert result['taglineLines']==1,'Hero title still wraps'
