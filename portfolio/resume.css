@@ -127,3 +127,14 @@
   .resume-side-section{margin:0}
   .resume-side-section:last-child{grid-column:1/-1}
 }
+
+/* Source-verified education and career timeline */
+.resume-employers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:15px 0 12px}
+.resume-employers>div{display:flex;flex-direction:column;gap:3px;min-width:0;padding:13px 14px;background:#edf6ef;border:1px solid #d6e7d9;border-radius:10px}
+.resume-employers strong{font-size:.83rem;color:#245d4a;font-weight:800}
+.resume-employers span{font-size:.74rem;color:#60786a}
+.resume-education-history{border-color:#b8d8c4;background:#f7fbf7}
+.resume-school-secondary{border-top:1px solid #dce9df;margin-top:13px;padding-top:12px;font-size:.81rem;font-weight:700}
+.resume-school-secondary span{display:block;font-size:.75rem;color:#647c70;font-weight:500}
+.resume-training-item+.resume-training-item{border-top:1px solid #dfeae2;margin-top:15px;padding-top:14px}
+@media(max-width:500px){.resume-employers{grid-template-columns:1fr}}
