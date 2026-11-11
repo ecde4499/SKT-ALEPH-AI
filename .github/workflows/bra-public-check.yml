@@ -27,8 +27,13 @@ jobs:
           assert story.count('<p>')==3
           strength=p.split('<section id="approach"',1)[1].split('</section>',1)[0]
           assert strength.count('<article>')==3
-          assert '01 / 소개' in p and '02 / 일하는 방식' in p and '03 / 대표 프로젝트' in p
+          assert all('class="eyebrow section-step">'+n+'</span>' in p for n in ('01','02','03','04'))
+          assert '01 / 소개' not in p and '03 / 대표 프로젝트' not in p
           assert p.count('class="featured-work"')==2
+          assert '<div class="works-heading">' in p
+          assert '<div class="secondary-grid">' in p
+          assert 'class="hero-intro"' in p and p.count('class="hero-sentence"')==2
+          assert 'class="evidence-label"' in p and 'class="evidence-toggle"' in p
           assert p.index('<h3>Protective DNS</h3>') < p.index('<h3>Clean4U</h3>')
           assert '가짜 피해구제·기관 사칭 사이트의 위험' in p
           assert '세탁소의 운영 업무를 한곳에서 관리하는 서비스' in p
@@ -38,7 +43,7 @@ jobs:
               assert (Path('portfolio')/l).is_file()
           assert '경험을 지원 서류로 연결합니다.' not in p
           assert '공개 GitHub 이슈로 문의하기' in p
-          assert 'href="./style.css?v=20261111-balanced2"' in p
+          assert 'href="./style.css?v=20261111-review3"' in p
           assert 'box-shadow:14px 16px 0 #e3eee7' in css
           assert "font-family:'Noto Sans KR'" in css
           stats=json.loads(Path('portfolio/data/summary.json').read_text())['stats']
@@ -53,7 +58,7 @@ jobs:
           READY=0
           for attempt in $(seq 1 30); do
             if curl -fsSL --max-time 20 "$BASE/index.html?rev=$GITHUB_SHA" -o test-results/bra/index.html && curl -fsSL --max-time 20 "$BASE/style.css?rev=$GITHUB_SHA" -o test-results/bra/style.css; then
-              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'Keep the expanded portfolio cards within a laptop-sized desktop chapter' test-results/bra/style.css && grep -q 'style.css?v=20261111-balanced2' test-results/bra/index.html;then READY=1;break;fi
+              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'review improvements' test-results/bra/style.css && grep -q 'flex-direction:column' test-results/bra/style.css && grep -q 'style.css?v=20261111-review3' test-results/bra/index.html;then READY=1;break;fi
             fi
             sleep 6
           done
@@ -81,26 +86,43 @@ jobs:
                   driver.get('https://bra-kimtaeyang-portfolio.onrender.com/?rev='+os.getenv('GITHUB_SHA',''))
                   WebDriverWait(driver,25).until(lambda d:d.execute_script('return document.fonts.status')=='loaded')
                   result=driver.execute_script("""
-                     const title=document.querySelector('.hero h2');
-                     const lh=parseFloat(getComputedStyle(title).lineHeight);
-                     const sections=['top','story','approach','works','documents'];
+                     const title=document.querySelector('.hero h2'),lh=parseFloat(getComputedStyle(title).lineHeight);
+                     const heroLine1=document.querySelector('.hero-sentence'),heroLine2=document.querySelectorAll('.hero-sentence')[1];
+                     const heading=document.querySelector('.works-heading').getBoundingClientRect(),
+                           main=document.querySelector('.featured-works').getBoundingClientRect(),
+                           more=document.querySelector('.secondary-work').getBoundingClientRect(),
+                           cards=[...document.querySelectorAll('.featured-work')].map(e=>e.getBoundingClientRect());
+                     const label=document.querySelector('.evidence-label').getBoundingClientRect(),
+                           plus=document.querySelector('.evidence-toggle').getBoundingClientRect();
                      return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,
                        taglineLines:Math.round(title.getBoundingClientRect().height/lh),
                        ornament:getComputedStyle(document.querySelector('.hero-box')).display,
-                       sections:sections.map(id=>({name:id,height:Math.round((document.getElementById(id)||document.querySelector('.hero')).getBoundingClientRect().height)}))};
+                       sentenceSeparation:Math.round(heroLine2.getBoundingClientRect().top-heroLine1.getBoundingClientRect().top),
+                       sentence1Height:Math.round(heroLine1.getBoundingClientRect().height),
+                       projectGeometry:{headingBottom:Math.round(heading.bottom),mainTop:Math.round(main.top),mainBottom:Math.round(main.bottom),moreTop:Math.round(more.top),cards:cards.map(x=>({x:Math.round(x.x),y:Math.round(x.y),width:Math.round(x.width)}))},
+                       plusGap:Math.round(plus.left-label.right),
+                       projectHeight:Math.round(document.querySelector('.works-section').getBoundingClientRect().height)};
                   """)
                   print('RESULT_'+label+': '+json.dumps(result,ensure_ascii=False))
                   assert result['scrollWidth']<=result['width']+3,'Horizontal scroll: '+label
+                  assert result['sentenceSeparation']>15,'Hero sentences not on separate lines'
+                  assert 0<=result['plusGap']<=13,'Plus is not beside ritual label: '+str(result['plusGap'])
+                  g=result['projectGeometry']
+                  assert g['mainTop']>=g['headingBottom']+5,'Projects heading and main cards overlap or flow horizontally: '+str(g)
+                  assert g['moreTop']>=g['mainBottom']+5,'Secondary works not placed underneath featured works: '+str(g)
                   if label=='desktop':
                       assert result['taglineLines']==1,'Hero title still wraps'
                       assert result['ornament']!='none','Original ornament missing'
-                      chapter=next(x for x in result['sections'] if x['name']=='works')
-                      assert chapter['height']<=height-72+3,'Project chapter still taller than viewport: '+str(chapter)
+                      assert abs(g['cards'][0]['y']-g['cards'][1]['y'])<=2,'Two featured projects are not side by side'
+                      assert g['cards'][0]['width']>=350 and g['cards'][1]['width']>=350,'Featured cards are squeezed'
+                      assert result['projectHeight']<=height-72+3,'Project chapter still taller than viewport: '+str(result['projectHeight'])
+                  else:
+                      assert g['cards'][1]['y']>g['cards'][0]['y'],'Mobile project cards should stack'
                   driver.save_screenshot('test-results/bra/'+label+'-hero.png')
                   for anchor in (['story','approach','works'] if label=='desktop' else ['works']):
                       driver.execute_script("document.getElementById(arguments[0]).scrollIntoView({behavior:'instant',block:'start'})",anchor)
                       driver.save_screenshot('test-results/bra/'+label+'-'+anchor+'.png')
-              print('PASS: desktop ornament + one-line tagline; mobile has no horizontal scrolling')
+              print('PASS: ordered project heading, two featured cards, two secondary cards, adjacent plus, and no mobile overflow')
           finally:
               driver.quit()
           PY
