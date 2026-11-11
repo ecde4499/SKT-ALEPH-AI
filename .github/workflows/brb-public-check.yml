@@ -23,9 +23,9 @@ jobs:
           assert "quizOptions" in p
           assert "630" in p and "300" in p and "120" in p
           assert "./brb/index.html" in s
-          assert "ASSIGNMENT 13" in s
+          assert "URL 주소 해부실" in s
           assert "13번 앱을 아직 만들지 않았습니다" not in s
-          print("PASS: app source and featured-work link")
+          print("PASS: app source and compact portfolio link")
           PY
       - name: Anonymous HTTPS public launch and linked portfolio
         shell: bash
@@ -55,7 +55,7 @@ jobs:
           assert "<title>URL 주소 해부실" in a
           assert "정규화 후 정확 비교" in a
           assert "주소 해부하기" in a and "1분 연습" in a
-          assert "ASSIGNMENT 13" in p and "./brb/index.html" in p
+          assert "URL 주소 해부실" in p and "./brb/index.html" in p
           assert len(a)>30000
           print("PASS: anonymous public app and featured portfolio link")
           PY
