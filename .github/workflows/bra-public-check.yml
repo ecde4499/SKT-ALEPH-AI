@@ -163,7 +163,7 @@ jobs:
                       work=driver.find_element(By.CSS_SELECTOR,'.nav nav a[href="#works"]')
                       work.click()
                       assert driver.execute_script('return location.hash')=='#works'
-                      assert work.get_attribute('aria-current')=='location','Active nav state missing'
+                      WebDriverWait(driver,8).until(lambda d:work.get_attribute('aria-current')=='location')
                       details=driver.find_element(By.ID,'evidence')
                       details.find_element(By.CSS_SELECTOR,'summary').click()
                       assert details.get_attribute('open') is not None,'Evidence disclosure did not open'
