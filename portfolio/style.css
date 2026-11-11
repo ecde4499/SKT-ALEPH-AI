@@ -150,3 +150,23 @@ a:focus-visible,summary:focus-visible{outline:3px solid #2b9f79;outline-offset:4
   html{scroll-behavior:auto;scroll-snap-type:none}
   .button{transition:none}
 }
+/* Desktop fit refinement: show each chapter at a glance on common laptop screens. */
+@media(min-width:1020px){
+  .approach{padding-block:43px}
+  .projects{padding-block:48px}
+  .approach .section-heading,.projects .section-heading{margin-bottom:24px}
+  .strength-card{padding:20px 23px 18px}
+  .strength-card h3{margin:11px 0 10px}
+  .strength-card p{line-height:1.82}
+  .evidence-details{margin-top:16px;padding-top:12px}
+  .approach .section-next{margin-top:8px}
+  .featured-card{padding:21px 24px}
+  .featured-card h3{margin:11px 0 3px}
+  .featured-card p{margin-bottom:12px}
+  .featured-card .project-subtitle{margin-bottom:10px!important}
+  .featured-card .project-link{margin-top:13px;padding-top:12px}
+  .other-projects{margin-top:17px}
+  .project-links{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .project-links a{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;padding:10px 13px}
+  .project-links span{text-align:left;font-size:.70rem}
+}
