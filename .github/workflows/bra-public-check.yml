@@ -40,10 +40,11 @@ jobs:
           resume=Path('portfolio/resume.html').read_text()
           resume_css=Path('portfolio/resume.css').read_text()
           for phrase in ('김태양','Protective DNS','Clean4U','로그 한눈에','ZTNA·XDR 공동방어전',
-                         '통신 회선 설계·현장 관리','2022~2024','ALEPH AI·보안 실습 과정',
-                         'Java, Spring Boot','Supabase Auth','재직 기간은 증빙 대조 필요'):
+                         '통신 회선 설계·현장 관리','씨케이네트워크','㈜제니스네트웍',
+                         '2024.08','동명대학교 · 경영정보학과','코리아IT아카데미','코리아AI아카데미',
+                         'Java, Spring Boot','Supabase Auth','경력증빙과 최종 대조'):
               assert phrase in resume,phrase
-          assert 'href="./resume.css?v=20261111-r2"' in resume
+          assert 'href="./resume.css?v=20261111-r4"' in resume
           assert '<a class="resume-brand" href="./index.html">김태양 / 포트폴리오</a>' in resume
           assert '@media(max-width:720px)' in resume_css
           assert '@media print' in resume_css
@@ -63,11 +64,19 @@ jobs:
               assert (Path('portfolio')/l).is_file()
           assert '경험을 지원 서류로 연결합니다.' not in p
           assert '공개 GitHub 이슈로 문의하기' in p
-          assert 'href="./style.css?v=20261111-review4"' in p
+          assert 'href="./style.css?v=20261111-aesthetic5"' in p
           assert 'box-shadow:14px 16px 0 #e3eee7' in css
           assert "font-family:'Noto Sans KR'" in css
           stats=json.loads(Path('portfolio/data/summary.json').read_text())['stats']
-          assert [stats[k] for k in ('open_days','close_days','iso_weeks','done_days','partly_done_days','not_done_days')]==[58,58,13,39,11,8]
+          assert [stats[k] for k in ('recorded_days','open_days','close_days','records_total','done_days','partly_done_days','not_done_days')]==[61,61,60,121,40,11,9]
+          assert stats['program_weeks']==13 and stats['iso_weeks']==14
+          assert 'data-field="recorded_days">61' in p
+          assert '2026.08.11~11.10' in p
+          assert '2026.08.11~11.10' in Path('portfolio/statement.html').read_text()
+          assert 'grid-template-columns:repeat(4,minmax(0,1fr))' in css
+          assert 'aria-current' in Path('portfolio/main.js').read_text()
+          assert '동명대학교 · 경영정보학과' in resume and '씨케이네트워크' in resume
+          assert '010-' not in resume and 'gmail.com' not in resume and '재반로' not in resume
           print('PASS: original hero/ornament/documents retained, targeted feedback only, featured capstone and Clean4U')
           PY
       - name: Check public HTTPS and all key links
@@ -78,7 +87,7 @@ jobs:
           READY=0
           for attempt in $(seq 1 30); do
             if curl -fsSL --max-time 20 "$BASE/index.html?rev=$GITHUB_SHA" -o test-results/bra/index.html && curl -fsSL --max-time 20 "$BASE/style.css?rev=$GITHUB_SHA" -o test-results/bra/style.css; then
-              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'review improvements' test-results/bra/style.css && grep -q 'flex-direction:column' test-results/bra/style.css && grep -q 'style.css?v=20261111-review4' test-results/bra/index.html && grep -q 'Clean4U 자세히 보기' test-results/bra/index.html;then READY=1;break;fi
+              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'review improvements' test-results/bra/style.css && grep -q 'flex-direction:column' test-results/bra/style.css && grep -q 'style.css?v=20261111-aesthetic5' test-results/bra/index.html && grep -q 'Clean4U 자세히 보기' test-results/bra/index.html;then READY=1;break;fi
             fi
             sleep 6
           done
@@ -89,9 +98,10 @@ jobs:
           curl -fsSL --max-time 20 "$BASE/resume.html?rev=$GITHUB_SHA" -o test-results/bra/resume.html
           curl -fsSL --max-time 20 "$BASE/resume.css?rev=$GITHUB_SHA" -o test-results/bra/resume.css
           grep -q 'class="resume-main-grid"' test-results/bra/resume.html
-          grep -q 'resume.css?v=20261111-r2' test-results/bra/resume.html
+          grep -q 'resume.css?v=20261111-r4' test-results/bra/resume.html
           grep -q 'Public resume page' test-results/bra/resume.css
           grep -q 'Tablet readability' test-results/bra/resume.css
+          grep -q 'Source-verified education' test-results/bra/resume.css
           echo "PASS: revised portfolio, expanded resume and all supporting pages available anonymously"
       - name: Inspect desktop and mobile layout in Chrome
         run: |
@@ -144,6 +154,24 @@ jobs:
                       assert result['projectHeight']<=height-72+3,'Project chapter still taller than viewport: '+str(result['projectHeight'])
                   else:
                       assert g['cards'][1]['y']>g['cards'][0]['y'],'Mobile project cards should stack'
+                  if label=='mobile':
+                      from selenium.webdriver.common.by import By
+                      links=driver.find_elements(By.CSS_SELECTOR,'.nav nav a')
+                      menu=[{'text':x.text,'displayed':x.is_displayed(),'height':int(x.rect['height'])} for x in links]
+                      print('MOBILE_MENU:'+json.dumps(menu,ensure_ascii=False))
+                      assert len(menu)==4 and all(x['displayed'] and x['height']>=40 for x in menu),menu
+                      work=driver.find_element(By.CSS_SELECTOR,'.nav nav a[href="#works"]')
+                      work.click()
+                      assert driver.execute_script('return location.hash')=='#works'
+                      assert work.get_attribute('aria-current')=='location','Active nav state missing'
+                      details=driver.find_element(By.ID,'evidence')
+                      details.find_element(By.CSS_SELECTOR,'summary').click()
+                      assert details.get_attribute('open') is not None,'Evidence disclosure did not open'
+                      record=driver.execute_script("return [...document.querySelectorAll('#evidence [data-field]')].map(x=>Number(x.textContent))")
+                      print('RITUAL_RENDERED:'+json.dumps(record))
+                      assert record==[61,60,40,61],record
+                      details.find_element(By.CSS_SELECTOR,'summary').click()
+                      assert details.get_attribute('open') is None,'Evidence disclosure did not close'
                   driver.save_screenshot('test-results/bra/'+label+'-hero.png')
                   for anchor in (['story','approach','works'] if label=='desktop' else ['works']):
                       driver.execute_script("document.getElementById(arguments[0]).scrollIntoView({behavior:'instant',block:'start'})",anchor)
@@ -179,6 +207,11 @@ jobs:
                   assert layout['fullWidth']<=layout['viewport']+2,'Resume horizontal overflow: '+label
                   assert layout['mainWidth']>=240,'Resume main column squeezed: '+str(layout)
                   assert layout['projects']==2 and layout['skills']==4
+                  assert len(driver.find_elements(By.CSS_SELECTOR,'.resume-employers>div'))==2,'Employer history missing'
+                  assert driver.find_elements(By.CSS_SELECTOR,'.resume-education-history'),'Education card missing'
+                  if label=='mobile':
+                      menu=driver.find_elements(By.CSS_SELECTOR,'.resume-header nav a')
+                      assert len(menu)==3 and all(x.is_displayed() and x.rect['height']>=40 for x in menu),'Resume touch targets too small'
                   if label=='desktop':
                       assert layout['sideX']>layout['mainX']+layout['mainWidth']-5,'Resume side column not next to main'
                   else:
