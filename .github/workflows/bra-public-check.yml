@@ -44,11 +44,20 @@ jobs:
                          '2024.08','동명대학교 · 경영정보학과','코리아IT아카데미','코리아AI아카데미',
                          'Java, Spring Boot','Supabase Auth','경력증빙과 최종 대조'):
               assert phrase in resume,phrase
-          assert 'href="./resume.css?v=20261111-r4"' in resume
+          assert 'href="./resume.css?v=20261111-career1"' in resume
           assert '<a class="resume-brand" href="./index.html">김태양 / 포트폴리오</a>' in resume
           assert '@media(max-width:720px)' in resume_css
           assert '@media print' in resume_css
           assert resume.count('class="resume-project"')==2
+          assert 'class="resume-duration">총 2년 7개월</span>' in resume
+          assert 'class="resume-employment-note"' in resume
+          assert '2023년 3월 소속 법인이 변경되었으며, 이후에도 기존 업무를 동일하게 수행했습니다.' in resume
+          assert '씨케이네트워크</strong><span>2022.02 ~ 2023.02 · 사원' in resume
+          assert '㈜제니스네트웍</strong><span>2023.03 ~ 2024.08 · 사원' in resume
+          career_page=Path('portfolio/experience.html').read_text()
+          assert '총 경력:</b> 2년 7개월 (2022.02 ~ 2024.08)' in career_page
+          assert '소속 변경:</b> 2023년 3월 소속 법인이 변경' in career_page
+          assert '.resume-entry-meta' in resume_css and '.resume-employment-note' in resume_css
           assert '010-' not in resume and 'gmail.com' not in resume
           assert len(resume)>6500 and len(resume_css)>6000
           assert '<div class="works-heading">' in p
@@ -98,7 +107,8 @@ jobs:
           curl -fsSL --max-time 20 "$BASE/resume.html?rev=$GITHUB_SHA" -o test-results/bra/resume.html
           curl -fsSL --max-time 20 "$BASE/resume.css?rev=$GITHUB_SHA" -o test-results/bra/resume.css
           grep -q 'class="resume-main-grid"' test-results/bra/resume.html
-          grep -q 'resume.css?v=20261111-r4' test-results/bra/resume.html
+          grep -q 'resume.css?v=20261111-career1' test-results/bra/resume.html
+          grep -q 'resume-employment-note' test-results/bra/resume.html
           grep -q 'Public resume page' test-results/bra/resume.css
           grep -q 'Tablet readability' test-results/bra/resume.css
           grep -q 'Source-verified education' test-results/bra/resume.css
@@ -210,6 +220,25 @@ jobs:
                   assert layout['mainWidth']>=240,'Resume main column squeezed: '+str(layout)
                   assert layout['projects']==2 and layout['skills']==4
                   assert len(driver.find_elements(By.CSS_SELECTOR,'.resume-employers>div'))==2,'Employer history missing'
+                  career=driver.execute_script("""
+                      const entry=document.querySelector('.resume-entry-header').getBoundingClientRect(),
+                            h=document.querySelector('.resume-entry-header h3').getBoundingClientRect(),
+                            meta=document.querySelector('.resume-entry-meta').getBoundingClientRect(),
+                            companies=[...document.querySelectorAll('.resume-employers > div')].map(e=>e.getBoundingClientRect()),
+                            note=document.querySelector('.resume-employment-note').getBoundingClientRect(),
+                            bullets=document.querySelector('.resume-experience ul').getBoundingClientRect();
+                      return {entryWidth:Math.round(entry.width),headingRight:Math.round(h.right),metaLeft:Math.round(meta.left),
+                              metaTop:Math.round(meta.top),headingTop:Math.round(h.top),
+                              companyWidths:companies.map(c=>Math.round(c.width)),companyBottom:Math.round(Math.max(...companies.map(c=>c.bottom))),
+                              noteTop:Math.round(note.top),noteBottom:Math.round(note.bottom),bulletsTop:Math.round(bullets.top),
+                              badgeVisible:getComputedStyle(document.querySelector('.resume-duration')).display!=='none'};
+                  """)
+                  print('CAREER_'+label+': '+json.dumps(career,ensure_ascii=False))
+                  assert career['badgeVisible'] and min(career['companyWidths'])>=210,'Employer cards squeezed: '+str(career)
+                  assert career['noteTop']>=career['companyBottom']-2,'Note overlaps employer cards: '+str(career)
+                  assert career['bulletsTop']>=career['noteBottom']-2,'Note overlaps duties: '+str(career)
+                  if abs(career['metaTop']-career['headingTop'])<=2:
+                      assert career['metaLeft']>=career['headingRight']-2,'Career badge overlaps title: '+str(career)
                   assert driver.find_elements(By.CSS_SELECTOR,'.resume-education-history'),'Education card missing'
                   if label=='mobile':
                       menu=driver.find_elements(By.CSS_SELECTOR,'.resume-header nav a')
@@ -219,6 +248,8 @@ jobs:
                   else:
                       assert layout['sideX']<=layout['mainX']+40,'Resume columns not stacked'
                   driver.save_screenshot('test-results/bra/resume-'+label+'-top.png')
+                  driver.execute_script("document.querySelector('.resume-experience').scrollIntoView({behavior:'instant',block:'center'})")
+                  driver.save_screenshot('test-results/bra/resume-'+label+'-career.png')
                   driver.execute_script("document.getElementById('resume-projects').scrollIntoView({behavior:'instant',block:'start'})")
                   driver.save_screenshot('test-results/bra/resume-'+label+'-projects.png')
               print('PASS: homepage, four uniform project links, expanded resume and responsive desktop/mobile/tablet layouts')

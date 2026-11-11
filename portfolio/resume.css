@@ -151,3 +151,20 @@
   .resume-page .resume-section{scroll-margin-top:110px}
 }
 @media(max-width:390px){.resume-page .resume-header nav a{font-size:.73rem}}
+
+
+/* Single continuous role, with company-specific dates visible and aligned. */
+.resume-entry-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 12px;min-width:0}
+.resume-duration{display:inline-flex;align-items:center;min-height:29px;padding:3px 10px;border:1px solid #b9d6c4;border-radius:999px;background:#edf6ef;color:#245e49;font-size:.79rem;font-weight:800;white-space:nowrap;line-height:1.45}
+.resume-employment-note{display:flex;align-items:baseline;gap:11px;border-left:2px solid #9cbca9;padding:2px 0 2px 13px;margin:7px 0 15px;font-size:.81rem;line-height:1.7;color:#536d5d}
+.resume-employment-note strong{flex:none;white-space:nowrap;font-size:.78rem;color:#2d6751;font-weight:800}
+.resume-employment-note span{min-width:0}
+@media(max-width:1010px){
+  .resume-entry-header{flex-wrap:wrap;align-items:flex-start;gap:5px 12px}
+  .resume-entry-meta{justify-content:flex-start}
+}
+@media(max-width:500px){
+  .resume-entry-meta{justify-content:flex-start;gap:7px 10px}
+  .resume-employment-note{display:block}
+  .resume-employment-note strong{display:block;margin-bottom:2px}
+}
