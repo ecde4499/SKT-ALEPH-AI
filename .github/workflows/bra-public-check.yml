@@ -33,6 +33,7 @@ jobs:
           assert '2026.08.11~11.05' in html
           assert '.hero-message{white-space:nowrap}' in css
           assert '@media(max-width:760px)' in css
+          assert 'Desktop fit refinement' in css
           stats=json.loads(Path('portfolio/data/summary.json').read_text())['stats']
           assert [stats[x] for x in ('open_days','close_days','iso_weeks','done_days','partly_done_days','not_done_days')]==[58,58,13,39,11,8]
           print('PASS: 3-paragraph introduction, 3 grounded examples, featured order, links, and dated sourced statistics')
@@ -85,6 +86,8 @@ jobs:
                   assert report['evidenceOpen'] is False
                   if label=='desktop':
                       assert report['heroLines']==1,'slogan is not on one desktop line'
+                      padding=browser.execute_script("return [getComputedStyle(document.querySelector('.approach')).paddingTop,getComputedStyle(document.querySelector('.projects')).paddingTop]")
+                      assert padding==['43px','48px'],'New compact CSS not loaded: '+str(padding)
                       for item in report['sections']:
                           assert item['height']<=1050, 'section too tall: '+str(item)
                   browser.save_screenshot('test-results/bra/'+label+'-hero.png')
