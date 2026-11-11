@@ -153,7 +153,7 @@ a:focus-visible,summary:focus-visible{outline:3px solid #2b9f79;outline-offset:4
 /* Desktop fit refinement: show each chapter at a glance on common laptop screens. */
 @media(min-width:1020px){
   .approach{padding-block:43px}
-  .projects{padding-block:48px}
+  .projects{padding-block:30px}
   .approach .section-heading,.projects .section-heading{margin-bottom:24px}
   .strength-card{padding:20px 23px 18px}
   .strength-card h3{margin:11px 0 10px}

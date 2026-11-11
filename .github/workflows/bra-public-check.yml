@@ -90,7 +90,7 @@ jobs:
                       padding=browser.execute_script("return [getComputedStyle(document.querySelector('.approach')).paddingTop,getComputedStyle(document.querySelector('.projects')).paddingTop]")
                       assert padding==['43px','48px'],'New compact CSS not loaded: '+str(padding)
                       for item in report['sections']:
-                          assert item['height']<=1050, 'section too tall: '+str(item)
+                          assert item['height']<=browser.execute_script('return window.innerHeight')-72+3, 'desktop chapter needs scrolling: '+str(item)
                   browser.save_screenshot('test-results/bra/'+label+'-hero.png')
                   for section in (['story','approach','works'] if label=='desktop' else ['works']):
                       browser.execute_script("document.getElementById(arguments[0]).scrollIntoView({behavior:'instant',block:'start'})",section)
