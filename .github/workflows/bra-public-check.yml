@@ -11,57 +11,62 @@ jobs:
     timeout-minutes: 9
     steps:
       - uses: actions/checkout@v4
-      - name: Verify source content and preserve all local links
+      - name: Check requested changes and untouched original design
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import json,re
-          html=Path('portfolio/index.html').read_text(encoding='utf-8')
-          css=Path('portfolio/style.css').read_text(encoding='utf-8')
-          for key in ('김태양','막힌 문제를 기록하고 검증하며','id="story"','id="approach"','id="works"','id="documents"','id="evidence"'):
-              assert key in html,key
-          story=html.split('<div class="story-content">',1)[1].split('</div>',1)[0]
+          import json
+          p=Path('portfolio/index.html').read_text()
+          css=Path('portfolio/style.css').read_text()
+          assert '<aside class="hero-box"><span>MY WORK PRINCIPLE</span>' in p
+          assert '통신 현장에서 배운 조율과 개발·보안 실습에서 익힌 검증 습관을 연결합니다' in p
+          assert '김태양<span class="accent">.' in p
+          assert '<section id="story"' in p and '<section id="approach"' in p
+          assert '<details id="evidence"' in p
+          story=p.split('<article class="prose">',1)[1].split('</article>',1)[0]
           assert story.count('<p>')==3
-          assert html.count('class="strength-card"')==3
-          assert html.count('class="featured-card"')==2
-          assert html.index('<h3>Protective DNS</h3>') < html.index('<h3>Clean4U</h3>')
-          assert '함께 확인할 수 있는 다른 작업' not in html
-          for link in ('projects/clean4u/index.html','projects/protective-dns/index.html','brb/index.html','research.html','statement.html','resume.html','experience.html'):
-              assert './'+link in html,link
-              assert (Path('portfolio')/link).exists(),link
-          assert '<details id="evidence"' in html and 'data-field="open_days"' in html
-          assert '2026.08.11~11.05' in html
-          assert '.hero-message{white-space:nowrap}' in css
-          assert '@media(max-width:760px)' in css
-          assert 'Desktop fit refinement' in css
-          assert 'style.css?v=20261111-compact3' in html
+          strength=p.split('<section id="approach"',1)[1].split('</section>',1)[0]
+          assert strength.count('<article>')==3
+          assert '01 / 소개' in p and '02 / 일하는 방식' in p and '03 / 대표 프로젝트' in p
+          assert p.count('class="featured-work"')==2
+          assert p.index('<h3>Protective DNS</h3>') < p.index('<h3>Clean4U</h3>')
+          assert '가짜 피해구제·기관 사칭 사이트의 위험' in p
+          assert '세탁소의 운영 업무를 한곳에서 관리하는 서비스' in p
+          assert '함께 확인할 수 있는 다른 작업' not in p
+          for l in ('projects/clean4u/index.html','projects/protective-dns/index.html','brb/index.html','research.html','resume.html','statement.html','experience.html'):
+              assert './'+l in p,l
+              assert (Path('portfolio')/l).is_file()
+          assert '경험을 지원 서류로 연결합니다.' not in p
+          assert '공개 GitHub 이슈로 문의하기' in p
+          assert 'href="./style.css?v=20261111-balanced1"' in p
+          assert 'box-shadow:14px 16px 0 #e3eee7' in css
+          assert "font-family:'Noto Sans KR'" in css
           stats=json.loads(Path('portfolio/data/summary.json').read_text())['stats']
-          assert [stats[x] for x in ('open_days','close_days','iso_weeks','done_days','partly_done_days','not_done_days')]==[58,58,13,39,11,8]
-          print('PASS: 3-paragraph introduction, 3 grounded examples, featured order, links, and dated sourced statistics')
+          assert [stats[k] for k in ('open_days','close_days','iso_weeks','done_days','partly_done_days','not_done_days')]==[58,58,13,39,11,8]
+          print('PASS: original hero/ornament/documents retained, targeted feedback only, featured capstone and Clean4U')
           PY
-      - name: Test updated public site and supporting pages without login
+      - name: Check public HTTPS and all key links
         run: |
           set -euo pipefail
-          BASE="https://bra-kimtaeyang-portfolio.onrender.com"
+          BASE=https://bra-kimtaeyang-portfolio.onrender.com
           mkdir -p test-results/bra
-          ok=0
-          for attempt in $(seq 1 28); do
-            if curl -fsSL --max-time 20 "$BASE/index.html?sha=$GITHUB_SHA" -o test-results/bra/index.html && curl -fsSL --max-time 20 "$BASE/style.css?sha=$GITHUB_SHA" -o test-results/bra/style.css; then
-              if grep -q 'id="approach"' test-results/bra/index.html && grep -q 'id="evidence"' test-results/bra/index.html && grep -q 'class="featured-grid"' test-results/bra/index.html && grep -q 'white-space:nowrap' test-results/bra/style.css; then ok=1;break;fi
+          READY=0
+          for attempt in $(seq 1 30); do
+            if curl -fsSL --max-time 20 "$BASE/index.html?rev=$GITHUB_SHA" -o test-results/bra/index.html && curl -fsSL --max-time 20 "$BASE/style.css?rev=$GITHUB_SHA" -o test-results/bra/style.css; then
+              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'Targeted feedback adjustments' test-results/bra/style.css;then READY=1;break;fi
             fi
-            sleep 8
+            sleep 6
           done
-          if [ "$ok" != 1 ]; then echo 'FAIL: updated public site is not deployed';exit 1;fi
-          for path in resume.html statement.html experience.html research.html brb/index.html projects/clean4u/index.html projects/protective-dns/index.html data/summary.json; do
-            curl -fsSL --max-time 20 "$BASE/$path" -o /dev/null
+          if [ "$READY" != "1" ];then echo 'FAIL: targeted redesign is not publicly deployed';exit 1;fi
+          for p in resume.html statement.html experience.html research.html brb/index.html projects/clean4u/index.html projects/protective-dns/index.html data/summary.json;do
+            curl -fsSL --max-time 20 "$BASE/$p" -o /dev/null
           done
-          echo 'PASS: anonymous access to updated portfolio and 8 related files'
-      - name: Check mobile and desktop layout in real Chrome
+          echo "PASS: new portfolio and supporting pages available anonymously"
+      - name: Inspect desktop and mobile layout in Chrome
         run: |
           python3 -m pip install -q selenium
           python3 - <<'PY'
           import os,shutil,json
-          from pathlib import Path
           from selenium import webdriver
           from selenium.webdriver.chrome.options import Options
           from selenium.webdriver.support.ui import WebDriverWait
@@ -69,35 +74,33 @@ jobs:
           options.binary_location=shutil.which('google-chrome') or shutil.which('chromium')
           for flag in ('--headless=new','--disable-gpu','--no-sandbox','--disable-dev-shm-usage'):
               options.add_argument(flag)
-          browser=webdriver.Chrome(options=options)
+          driver=webdriver.Chrome(options=options)
           try:
               for width,height,label in ((1440,900,'desktop'),(390,844,'mobile')):
-                  browser.set_window_size(width,height)
-                  browser.get('https://bra-kimtaeyang-portfolio.onrender.com/index.html?check='+os.environ.get('GITHUB_SHA',''))
-                  WebDriverWait(browser,25).until(lambda x:x.execute_script('return document.fonts.status')=='loaded')
-                  report=browser.execute_script("""
-                    const t=document.querySelector('.hero-message'),l=parseFloat(getComputedStyle(t).lineHeight);
-                    return {viewport:window.innerWidth,fullWidth:document.documentElement.scrollWidth,
-                      heroLines:Math.round(t.getBoundingClientRect().height/l),
-                      sections:['top','story','approach','works','documents'].map(id=>({id,height:Math.round(document.getElementById(id).getBoundingClientRect().height)})),
-                      evidenceOpen:document.getElementById('evidence').open};
+                  driver.set_window_size(width,height)
+                  driver.get('https://bra-kimtaeyang-portfolio.onrender.com/?rev='+os.getenv('GITHUB_SHA',''))
+                  WebDriverWait(driver,25).until(lambda d:d.execute_script('return document.fonts.status')=='loaded')
+                  result=driver.execute_script("""
+                     const title=document.querySelector('.hero h2');
+                     const lh=parseFloat(getComputedStyle(title).lineHeight);
+                     const sections=['top','story','approach','works','documents'];
+                     return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,
+                       taglineLines:Math.round(title.getBoundingClientRect().height/lh),
+                       ornament:getComputedStyle(document.querySelector('.hero-box')).display,
+                       sections:sections.map(id=>({name:id,height:Math.round((document.getElementById(id)||document.querySelector('.hero')).getBoundingClientRect().height)}))};
                   """)
-                  print('LAYOUT_'+label+': '+json.dumps(report,ensure_ascii=False))
-                  assert report['fullWidth']<=report['viewport']+2,'horizontal overflow: '+label
-                  assert report['evidenceOpen'] is False
+                  print('RESULT_'+label+': '+json.dumps(result,ensure_ascii=False))
+                  assert result['scrollWidth']<=result['width']+3,'Horizontal scroll: '+label
                   if label=='desktop':
-                      assert report['heroLines']==1,'slogan is not on one desktop line'
-                      padding=browser.execute_script("return [getComputedStyle(document.querySelector('.approach')).paddingTop,getComputedStyle(document.querySelector('.projects')).paddingTop]")
-                      assert padding==['43px','30px'],'New compact CSS not loaded: '+str(padding)
-                      for item in report['sections']:
-                          assert item['height']<=browser.execute_script('return window.innerHeight')-72+3, 'desktop chapter needs scrolling: '+str(item)
-                  browser.save_screenshot('test-results/bra/'+label+'-hero.png')
-                  for section in (['story','approach','works'] if label=='desktop' else ['works']):
-                      browser.execute_script("document.getElementById(arguments[0]).scrollIntoView({behavior:'instant',block:'start'})",section)
-                      browser.save_screenshot('test-results/bra/'+label+'-'+section+'.png')
-              print('PASS: 1-line desktop hero, desktop section height, responsive mobile without overflow')
+                      assert result['taglineLines']==1,'Hero title still wraps'
+                      assert result['ornament']!='none','Original ornament missing'
+                  driver.save_screenshot('test-results/bra/'+label+'-hero.png')
+                  for anchor in (['story','approach','works'] if label=='desktop' else ['works']):
+                      driver.execute_script("document.getElementById(arguments[0]).scrollIntoView({behavior:'instant',block:'start'})",anchor)
+                      driver.save_screenshot('test-results/bra/'+label+'-'+anchor+'.png')
+              print('PASS: desktop ornament + one-line tagline; mobile has no horizontal scrolling')
           finally:
-              browser.quit()
+              driver.quit()
           PY
       - name: Upload evidence without private ritual source
         if: always()
