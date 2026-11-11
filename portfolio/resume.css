@@ -138,3 +138,16 @@
 .resume-school-secondary span{display:block;font-size:.75rem;color:#647c70;font-weight:500}
 .resume-training-item+.resume-training-item{border-top:1px solid #dfeae2;margin-top:15px;padding-top:14px}
 @media(max-width:500px){.resume-employers{grid-template-columns:1fr}}
+
+/* Resume touch navigation in sync with portfolio. */
+.resume-page .resume-header nav a{display:inline-flex;align-items:center;min-height:42px;padding:7px 8px;border-radius:7px}
+.resume-page .resume-header nav a:hover{background:#e6f2e9}
+.resume-page .resume-header nav a:focus-visible{outline-offset:3px}
+@media(max-width:720px){
+  .resume-page .resume-header-inner{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:2px;padding:7px 0 5px;min-height:0}
+  .resume-page .resume-brand{align-self:flex-start;font-size:.8rem;padding:3px 0}
+  .resume-page .resume-header nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;width:100%}
+  .resume-page .resume-header nav a{justify-content:center;min-height:42px;font-size:.77rem;padding:6px 2px}
+  .resume-page .resume-section{scroll-margin-top:110px}
+}
+@media(max-width:390px){.resume-page .resume-header nav a{font-size:.73rem}}
