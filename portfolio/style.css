@@ -171,3 +171,7 @@ body{font-size:15px;line-height:1.75}
 
 /* Final project chapter viewport fit, no content removal. */
 @media(min-width:1100px){.works-section{padding-block:18px}}
+
+/* Accessibility: keep disclosure targets visible beneath the sticky two-row menu. */
+.evidence-details summary{scroll-margin-top:140px}
+@media(min-width:801px){.evidence-details summary{scroll-margin-top:102px}}

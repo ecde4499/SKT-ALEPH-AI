@@ -64,7 +64,7 @@ jobs:
               assert (Path('portfolio')/l).is_file()
           assert '경험을 지원 서류로 연결합니다.' not in p
           assert '공개 GitHub 이슈로 문의하기' in p
-          assert 'href="./style.css?v=20261111-aesthetic7"' in p
+          assert 'href="./style.css?v=20261111-aesthetic8"' in p
           assert 'box-shadow:14px 16px 0 #e3eee7' in css
           assert "font-family:'Noto Sans KR'" in css
           stats=json.loads(Path('portfolio/data/summary.json').read_text())['stats']
@@ -87,7 +87,7 @@ jobs:
           READY=0
           for attempt in $(seq 1 30); do
             if curl -fsSL --max-time 20 "$BASE/index.html?rev=$GITHUB_SHA" -o test-results/bra/index.html && curl -fsSL --max-time 20 "$BASE/style.css?rev=$GITHUB_SHA" -o test-results/bra/style.css; then
-              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'review improvements' test-results/bra/style.css && grep -q 'flex-direction:column' test-results/bra/style.css && grep -q 'style.css?v=20261111-aesthetic7' test-results/bra/index.html && grep -q 'Clean4U 자세히 보기' test-results/bra/index.html;then READY=1;break;fi
+              if grep -q 'class="hero-box"' test-results/bra/index.html && grep -q 'id="approach"' test-results/bra/index.html && grep -q 'class="featured-work"' test-results/bra/index.html && grep -q 'review improvements' test-results/bra/style.css && grep -q 'flex-direction:column' test-results/bra/style.css && grep -q 'style.css?v=20261111-aesthetic8' test-results/bra/index.html && grep -q 'Clean4U 자세히 보기' test-results/bra/index.html;then READY=1;break;fi
             fi
             sleep 6
           done
@@ -165,12 +165,14 @@ jobs:
                       assert driver.execute_script('return location.hash')=='#works'
                       WebDriverWait(driver,8).until(lambda d:work.get_attribute('aria-current')=='location')
                       details=driver.find_element(By.ID,'evidence')
-                      details.find_element(By.CSS_SELECTOR,'summary').click()
+                      summary=details.find_element(By.CSS_SELECTOR,'summary')
+                      driver.execute_script("arguments[0].scrollIntoView({block:'center',behavior:'instant'})",summary)
+                      summary.click()
                       assert details.get_attribute('open') is not None,'Evidence disclosure did not open'
                       record=driver.execute_script("return [...document.querySelectorAll('#evidence [data-field]')].map(x=>Number(x.textContent))")
                       print('RITUAL_RENDERED:'+json.dumps(record))
                       assert record==[61,60,40,61],record
-                      details.find_element(By.CSS_SELECTOR,'summary').click()
+                      summary.click()
                       assert details.get_attribute('open') is None,'Evidence disclosure did not close'
                   driver.save_screenshot('test-results/bra/'+label+'-hero.png')
                   for anchor in (['story','approach','works'] if label=='desktop' else ['works']):
