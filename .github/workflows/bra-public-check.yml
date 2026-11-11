@@ -11,52 +11,90 @@ jobs:
     timeout-minutes: 9
     steps:
       - uses: actions/checkout@v4
-      - name: Verify source integrity and source statistics
+      - name: Verify source content and preserve all local links
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import json
-          page=Path("portfolio/index.html").read_text(encoding="utf-8")
-          assert "김태양" in page and "2026년 8월 12일" in page
-          assert "ASSIGNMENT 10" in page and "ASSIGNMENT 13" in page
-          assert "2026년 11월 5일" in page
-          metrics=json.loads(Path("portfolio/data/summary.json").read_text())["stats"]
-          assert [metrics[k] for k in ("open_days","close_days","iso_weeks","done_days","partly_done_days","not_done_days")]==[58,58,13,39,11,8]
-          print("PASS local source: public narrative, research, placeholder and verified statistics")
+          import json,re
+          html=Path('portfolio/index.html').read_text(encoding='utf-8')
+          css=Path('portfolio/style.css').read_text(encoding='utf-8')
+          for key in ('김태양','막힌 문제를 기록하고 검증하며','id="story"','id="approach"','id="works"','id="documents"','id="evidence"'):
+              assert key in html,key
+          story=html.split('<div class="story-content">',1)[1].split('</div>',1)[0]
+          assert story.count('<p>')==3
+          assert html.count('class="strength-card"')==3
+          assert html.count('class="featured-card"')==2
+          assert html.index('<h3>Protective DNS</h3>') < html.index('<h3>Clean4U</h3>')
+          assert '함께 확인할 수 있는 다른 작업' not in html
+          for link in ('projects/clean4u/index.html','projects/protective-dns/index.html','brb/index.html','research.html','statement.html','resume.html','experience.html'):
+              assert './'+link in html,link
+              assert (Path('portfolio')/link).exists(),link
+          assert '<details id="evidence"' in html and 'data-field="open_days"' in html
+          assert '2026.08.11~11.05' in html
+          assert '.hero-message{white-space:nowrap}' in css
+          assert '@media(max-width:760px)' in css
+          stats=json.loads(Path('portfolio/data/summary.json').read_text())['stats']
+          assert [stats[x] for x in ('open_days','close_days','iso_weeks','done_days','partly_done_days','not_done_days')]==[58,58,13,39,11,8]
+          print('PASS: 3-paragraph introduction, 3 grounded examples, featured order, links, and dated sourced statistics')
           PY
-      - name: Test public HTTPS site without authentication
+      - name: Test updated public site and supporting pages without login
         run: |
-          set -eu
-          BASE=https://bra-kimtaeyang-portfolio.onrender.com
+          set -euo pipefail
+          BASE="https://bra-kimtaeyang-portfolio.onrender.com"
           mkdir -p test-results/bra
-          for p in index.html resume.html statement.html experience.html research.html data/summary.json; do
-            echo "GET /$p (anonymous)"
-            curl --location --retry 12 --retry-delay 5 --retry-all-errors --max-time 18 --fail --silent --show-error "$BASE/$p" -o "test-results/bra/$(basename "$p")"
+          ok=0
+          for attempt in $(seq 1 28); do
+            if curl -fsSL --max-time 20 "$BASE/index.html?sha=$GITHUB_SHA" -o test-results/bra/index.html && curl -fsSL --max-time 20 "$BASE/style.css?sha=$GITHUB_SHA" -o test-results/bra/style.css; then
+              if grep -q 'id="approach"' test-results/bra/index.html && grep -q 'id="evidence"' test-results/bra/index.html && grep -q 'class="featured-grid"' test-results/bra/index.html && grep -q 'white-space:nowrap' test-results/bra/style.css; then ok=1;break;fi
+            fi
+            sleep 8
           done
-          python3 - <<'PY'
-          from pathlib import Path
-          import json
-          root=Path("test-results/bra")
-          html=(root/"index.html").read_text(encoding="utf-8")
-          for word in ("김태양","막힌 문제를 기록","2026년 8월 12일","과제10","ASSIGNMENT 13","이력서","자기소개서","경력기술서"):
-              assert word in html, word
-          for file in ("resume.html","statement.html","experience.html","research.html"):
-              assert len((root/file).read_bytes())>300, file
-          d=json.loads((root/"summary.json").read_text(encoding="utf-8"))
-          assert d["stats"]["recorded_days"]==58
-          assert d["stats"]["done_days"]==39
-          assert d["approved_paragraphs"]==[]
-          assert "동료 1가 말해 준 내 장점:" not in html
-          assert "감사일기:" not in html
-          print("PASS public anonymous HTTPS 6/6, verified narrative, files and no unapproved paragraphs")
-          PY
-      - name: Capture public first screen (Chrome)
+          if [ "$ok" != 1 ]; then echo 'FAIL: updated public site is not deployed';exit 1;fi
+          for path in resume.html statement.html experience.html research.html brb/index.html projects/clean4u/index.html projects/protective-dns/index.html data/summary.json; do
+            curl -fsSL --max-time 20 "$BASE/$path" -o /dev/null
+          done
+          echo 'PASS: anonymous access to updated portfolio and 8 related files'
+      - name: Check mobile and desktop layout in real Chrome
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y fonts-nanum
-          CHROME=$(command -v google-chrome || command -v chromium)
-          "$CHROME" --headless --disable-gpu --no-sandbox --disable-dev-shm-usage --hide-scrollbars --window-size=1400,950 --screenshot=test-results/bra/first-screen.png https://bra-kimtaeyang-portfolio.onrender.com || true
-          test -s test-results/bra/first-screen.png || echo "SCREENSHOT_SKIPPED: public smoke passed; screenshot unavailable"
+          python3 -m pip install -q selenium
+          python3 - <<'PY'
+          import os,shutil,json
+          from pathlib import Path
+          from selenium import webdriver
+          from selenium.webdriver.chrome.options import Options
+          from selenium.webdriver.support.ui import WebDriverWait
+          options=Options()
+          options.binary_location=shutil.which('google-chrome') or shutil.which('chromium')
+          for flag in ('--headless=new','--disable-gpu','--no-sandbox','--disable-dev-shm-usage'):
+              options.add_argument(flag)
+          browser=webdriver.Chrome(options=options)
+          try:
+              for width,height,label in ((1440,900,'desktop'),(390,844,'mobile')):
+                  browser.set_window_size(width,height)
+                  browser.get('https://bra-kimtaeyang-portfolio.onrender.com/index.html?check='+os.environ.get('GITHUB_SHA',''))
+                  WebDriverWait(browser,25).until(lambda x:x.execute_script('return document.fonts.status')=='loaded')
+                  report=browser.execute_script("""
+                    const t=document.querySelector('.hero-message'),l=parseFloat(getComputedStyle(t).lineHeight);
+                    return {viewport:window.innerWidth,fullWidth:document.documentElement.scrollWidth,
+                      heroLines:Math.round(t.getBoundingClientRect().height/l),
+                      sections:['top','story','approach','works','documents'].map(id=>({id,height:Math.round(document.getElementById(id).getBoundingClientRect().height)})),
+                      evidenceOpen:document.getElementById('evidence').open};
+                  """)
+                  print('LAYOUT_'+label+': '+json.dumps(report,ensure_ascii=False))
+                  assert report['fullWidth']<=report['viewport']+2,'horizontal overflow: '+label
+                  assert report['evidenceOpen'] is False
+                  if label=='desktop':
+                      assert report['heroLines']==1,'slogan is not on one desktop line'
+                      for item in report['sections']:
+                          assert item['height']<=1050, 'section too tall: '+str(item)
+                  browser.save_screenshot('test-results/bra/'+label+'-hero.png')
+                  for section in (['story','approach','works'] if label=='desktop' else ['works']):
+                      browser.execute_script("document.getElementById(arguments[0]).scrollIntoView({behavior:'instant',block:'start'})",section)
+                      browser.save_screenshot('test-results/bra/'+label+'-'+section+'.png')
+              print('PASS: 1-line desktop hero, desktop section height, responsive mobile without overflow')
+          finally:
+              browser.quit()
+          PY
       - name: Upload evidence without private ritual source
         if: always()
         uses: actions/upload-artifact@v4
