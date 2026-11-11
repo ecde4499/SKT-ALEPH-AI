@@ -168,3 +168,6 @@ body{font-size:15px;line-height:1.75}
   .strength .tri article{padding-top:25px;padding-bottom:24px;min-height:348px}
   .strength .evidence-details{margin-top:17px;padding-top:12px}
 }
+
+/* Final project chapter viewport fit, no content removal. */
+@media(min-width:1100px){.works-section{padding-block:18px}}
